@@ -5,7 +5,7 @@ setup(name='tokyo',
        description='Tokyo Cabinet bindings',
        packages=['tokyo', 'tokyo.cabinet'],
        package_dir={'': 'src'},
-       ext_modules=[Extension('tokyo.cabinet._cabext',
-                       sources=['src/cabext.cc'],
+       ext_modules=[Extension('tokyo.cabinet._bdb',
+                       sources=['src/bdb.cc'],
                        libraries=['tokyocabinet'])]
 )
