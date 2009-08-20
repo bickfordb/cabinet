@@ -1,0 +1,8 @@
+build
+dist
+src/bdb.cc
+src/tokyo/cabinet/bdb.py
+tests/lib
+*.swp
+*.pyc
+
