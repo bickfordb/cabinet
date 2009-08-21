@@ -10,5 +10,8 @@ clean:
 	- rm -rf src/tokyo/cabinet/bdb.py
 
 test: src/bdb.cc
-	python setup.py build 
-	python setup.py install --root=tests/lib
+	- rm -rf build/test
+	- mkdir build
+	python setup.py install --install-lib=build/test
+	PYTHONPATH="build/test:$(PYTHONPATH)" python -m tests.bdb
+

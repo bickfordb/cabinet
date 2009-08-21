@@ -1,8 +1,13 @@
 %module bdb
+%include "std_string.i"
+%include "typemaps.i"
 
 %{
 #define SWIG_FILE_WITH_INIT
 #include <tcbdb.h>
+#include <string>
+
+
 class BDB {
     public:
     BDB() { 
@@ -11,44 +16,151 @@ class BDB {
     ~BDB() {
         if (this->_db) tcbdbdel(_db);
     }
+
+    bool tune(long lmemb, long nmemb,
+                     long long bnum, long apow, long fpow, long opts) {
+        return tcbdbtune(_db, lmemb, nmemb, bnum, apow, fpow, opts); 
+    }
+
+    bool setcache(long lcnum, long ncnum) {
+        return tcbdbsetcache(_db, lcnum, ncnum);
+    }
+
+    bool setxmsiz(long long xmsiz) {
+        return tcbdbsetxmsiz(_db, xmsiz);
+    }
+
+    bool open(const std::string & path, long omode) {
+        return tcbdbopen(_db, path.c_str(), omode);
+    }
+    bool close() {
+        return tcbdbclose(_db);
+    }
+
+    bool put(const std::string & key, const std::string & value) {
+        return tcbdbput(_db, key.c_str(), key.length(), value.c_str(), value.length());
+    }
+
+    bool putkeep(const std::string & key, const std::string & value) {
+        return tcbdbputkeep(_db, key.c_str(), key.length(), value.c_str(), value.length());
+    }
+
+    bool out(const std::string & key) {
+        return tcbdbout(_db, key.c_str(), key.length());
+    }
+    PyObject * get(const std::string & key) {
+        int value_size = 0;
+        void *value = tcbdbget(_db, key.c_str(), key.length(), &value_size);    
+        if (value != NULL) {
+            PyObject *result = PyString_FromStringAndSize((const char*) value, value_size);
+            free(value);
+            return result;
+        } else { 
+            return Py_None;
+        } 
+    }
+    long vsiz(const std::string & key) { 
+        return tcbdbvsiz(_db, key.c_str(), key.length());
+    };
+
+    long addint(const std::string & key, long num) {
+        return tcbdbaddint(_db, key.c_str(), key.length(), num);
+    }
+    double adddouble(const std::string & key, double num) {
+        return tcbdbadddouble(_db, key.c_str(), key.length(), num);
+    }
+    bool sync() {
+        return tcbdbsync(_db);
+    }
+
+    bool optimize(TCBDB *bdb, int32_t lmemb, int32_t nmemb,
+                   int64_t bnum, int8_t apow, int8_t fpow, uint8_t opts) {
+        return tcbdboptimize(_db, lmemb, nmemb, bnum, apow, fpow, opts);
+    }
+
+    bool vanish() {
+        return tcbdbvanish(_db);
+    }
+    bool copy(const std::string & path) {
+        return tcbdbcopy(_db, path.c_str());
+    }
+    bool tranbegin() { 
+        return tcbdbtranbegin(_db);
+    }
+
+    bool trancommit() {
+        return tcbdbtrancommit(_db);
+    }
+    bool tranabort() { 
+        return tcbdbtranabort(_db);
+    }
+
+    const char *path() {
+        return tcbdbpath(_db);
+    }
+
+    long long rnum() { 
+        return tcbdbrnum(_db); 
+    }
+
+    long long fsiz() {
+        return tcbdbfsiz(_db);
+    }
+
+    bool putcat(const std::string & key, const std::string & value) {
+        return tcbdbputcat(_db, key.c_str(), key.length(), value.c_str(), value.length());
+    }
+
+    static const long TLARGE = 1 << 0;
+    static const long TDEFLATE = 1 << 1;
+    static const long TBZIP = 1 << 2;
+    static const long TTCBS = 1 << 3;
+    static const long OREADER = 1 << 0;
+    static const long OWRITER = 1 << 1;
+    static const long OCREAT = 1 << 2;
+    static const long OTRUNC = 1 << 3;
+    static const long ONOLCK = 1 << 4;
+    static const long OLCKNB = 1 << 5;
+    static const long OTSYNC = 1 << 6;
+    private:
     TCBDB *_db; 
 };
 
 %}
 
 class BDB {
-    TCBDB *_db;
-};
-
-%extend BDB { 
     
+    public:
+    static const long TLARGE;
+    static const long TDEFLATE;
+    static const long TBZIP;
+    static const long TTCBS;
+    static const long OREADER;
+    static const long OWRITER;
+    static const long OCREAT;
+    static const long OTRUNC;
+    static const long ONOLCK;
+    static const long OLCKNB;
+    static const long OTSYNC;
+ 
     %feature("autodoc") tune;
     bool tune(long lmemb, long nmemb,
-                     long long bnum, long apow, long fpow, long opts) {
-        return tcbdbtune(self->_db, lmemb, nmemb, bnum, apow, fpow, opts); 
-    }
+                     long long bnum, long apow, long fpow, long opts) ;
+    
     %feature("autodoc") setcache;
-    bool setcache(long lcnum, long ncnum) {
-        return tcbdbsetcache(self->_db, lcnum, ncnum);
-    }
+    bool setcache(long lcnum, long ncnum);
+
     %feature("autodoc") setmxsiz;
-    bool setxmsiz(long long xmsiz) {
-        return tcbdbsetxmsiz(self->_db, xmsiz);
-    }
+    bool setxmsiz(long long xmsiz);
 
     %feature("autodoc") open;
-    bool open(const char* path, long omode) {
-        return tcbdbopen(self->_db, path, omode);
-    }
+    bool open(const char* path, long omode) ;
 
     %feature("autodoc") close;
-    bool close() {
-        return tcbdbclose(self->_db);
-    }
+    bool close();
     
     %apply (char *STRING, int LENGTH) { (const void *key, int key_size) };
     %apply (char *STRING, int LENGTH) { (const void *value, int value_size) };
-    
 
     %feature("docstring", "Store a new record into a B+ tree database object.
 
@@ -58,85 +170,37 @@ value -- the value
 
 Returns:
 boolean") put;
-    bool put(const void* key, int key_size, const void* value, int value_size) {
-        return tcbdbput(self->_db, key, key_size, value, value_size);
-    };
+    //bool put(const void* key, int key_size, const void* value, int value_size);
+    bool put(const std::string & key, const std::string & value);
 
     %feature("autodoc", "Concatenate a value at the end of the existing record in a B+ tree database object.") putkeep;
-    bool putkeep(const void *key, int key_size , const void *value, int value_size) {
-        return tcbdbputkeep(self->_db, key, key_size, value, value_size);
-    }
+    bool putkeep(const std::string & key, const std::string & value);
 
     %feature("docstring", "Concatenate a value at the end of the existing record in a B+ tree database object.") putcat;
-    bool putcat(const void* key, int key_size, const void* value, int value_size) {
-        return tcbdbputcat(self->_db, key, key_size, value, value_size);
-    }
+    bool putcat(const std::string & key, const std::string & value);
     
-    // bool putasync(const void* key, int key_size, const void *value, int value_size) ;
+    bool out(const std::string & key) ;
 
-    bool out(const void* key, int key_size) {
-        return tcbdbout(self->_db, key, key_size);
-    }
+    PyObject * get(const std::string & key);
+    
+    long vsiz(const std::string & key);
 
-    PyObject* get(const void* key, int key_size) {
-        int value_size = 0;
-        void *value = tcbdbget(self->_db, key, key_size, &value_size);    
-        if (value != NULL) {
-            PyObject *result = PyString_FromStringAndSize((const char*)value, value_size);
-            free(value);
-            return result;
-        } else { 
-            return Py_None;
-        } 
-    }
-    long vsiz(const void* key, int key_size) { 
-        return tcbdbvsiz(self->_db, key, key_size);
-    };
-
-    // bool iterinit() ;
-    // const char* iternext();
-    //List fwmkeys(const char* prefix, long max);
-    long addint(const void* key, int key_size, long num) {
-        return tcbdbaddint(self->_db, key, key_size, num);
-    }
-    double adddouble(const void* key, int key_size, double num) {
-        return tcbdbadddouble(self->_db, key, key_size, num);
-    }
-    bool sync() {
-        return tcbdbsync(self->_db);
-    }
+    long addint(const std::string & key, long num);
+    double adddouble(const std::string & key, double num) ;
+    bool sync() ;
 
     bool optimize(TCBDB *bdb, int32_t lmemb, int32_t nmemb,
-                   int64_t bnum, int8_t apow, int8_t fpow, uint8_t opts) {
-        return tcbdboptimize(self->_db, lmemb, nmemb, bnum, apow, fpow, opts);
-    }
+                   int64_t bnum, int8_t apow, int8_t fpow, uint8_t opts);
 
-    bool vanish() {
-        return tcbdbvanish(self->_db);
-    }
-    bool copy(const char* path) {
-        return tcbdbcopy(self->_db, path);
-    }
-    bool tranbegin() { 
-        return tcbdbtranbegin(self->_db);
-    }
+    bool vanish();
+    bool copy(const std::string & path);
+    bool tranbegin();
 
-    bool trancommit() {
-        return tcbdbtrancommit(self->_db);
-    }
-    bool tranabort() { 
-        return tcbdbtranabort(self->_db);
-    }
+    bool trancommit();
+    bool tranabort();
 
-    const char *path() {
-        return tcbdbpath(self->_db);
-    }
-    long long rnum() { 
-        return tcbdbrnum(self->_db); 
-    }
-    long long fsiz() {
-        return tcbdbfsiz(self->_db);
-    }
-
+    const char *path();
+    long long rnum();
+    long long fsiz();
 };
 
