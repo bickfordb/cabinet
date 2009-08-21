@@ -13,5 +13,5 @@ test: src/bdb.cc
 	- rm -rf build/test
 	- mkdir build
 	python setup.py install --install-lib=build/test
-	PYTHONPATH="build/test:$(PYTHONPATH)" python -m tests.bdb
+	PYTHONPATH="build/test:$(PYTHONPATH)" python -m tests.bdb -v
 
