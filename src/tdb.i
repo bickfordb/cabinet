@@ -1,6 +1,6 @@
 %module(docstring="The table database API of Tokyo Cabinet", module="tokyocabinet") tdb
 %include "std_string.i"
-%include "std_map.i"
+%include "tcmaps.i"
 %include "typemaps.i"
 
 %{
@@ -13,61 +13,69 @@ using namespace std;
 typedef std::map<std::string, std::string> StringMap;
 typedef std::pair<std::string, std::string> StringPair;
 
-
 class TDBQuery;
 class TDB;
 
 class TDB {
     public:
     TDB() { 
-        this->_db = tctdbnew();
+        _db = tctdbnew();
     }
     ~TDB() {
-        if (this->_db) tctdbdel(_db);
+        if (_db != NULL) tctdbdel(_db);
     }
 
+    TCTDB *_db; 
+};
+
+%}
+
+class TDB {
+};
+
+%extend TDB { 
+    int __len__() { 
+        return tctdbrnum(self->_db);
+    }
     bool tune(int64_t bnum, int8_t apow, int8_t fpow, uint8_t opts) {
-        return tctdbtune(_db, bnum, apow, fpow, opts); 
+        return tctdbtune(self->_db, bnum, apow, fpow, opts); 
     }
 
     bool setcache(int32_t rcnum, int32_t lcnum, int32_t ncnum) {
-        return tctdbsetcache(_db, rcnum, lcnum, ncnum);
+        return tctdbsetcache(self->_db, rcnum, lcnum, ncnum);
     }
 
     bool setxmsiz(long long xmsiz) {
-        return tctdbsetxmsiz(_db, xmsiz);
+        return tctdbsetxmsiz(self->_db, xmsiz);
     }
 
     bool open(const std::string & path, long omode) {
-        return tctdbopen(_db, path.c_str(), omode);
+        return tctdbopen(self->_db, path.c_str(), omode);
     }
 
     bool close() {
-        return tctdbclose(_db);
+        return tctdbclose(self->_db);
     }
 
-    bool put(const std::string & key, StringMap & columns) {
-        TCMAP *the_map = tcmapnew(); 
-        StringMap::iterator i;
-        for (i = columns.begin(); i != columns.end(); ++i) {
-            std::string key = i->first;
-            std::string val = i->second;
-            tcmapput(the_map, key.c_str(), key.length(), val.c_str(), val.length());
-        }
-        bool result = tctdbput(_db, key.c_str(), key.length(), the_map);
-        tcmapdel(the_map);
-        return result;
+    bool put(const std::string & key, TCMAP *columns) {
+        return tctdbput(self->_db, key.c_str(), key.length(), columns);
     }
+
+    %newobject get;
+    TCMAP *get(const std::string & key) {
+        return tctdbget(self->_db, key.c_str(), key.length());
+    }
+
     const char *path() {
-        return tctdbpath(_db);
+        return tctdbpath(self->_db);
     }
 
     long long rnum() { 
-        return tctdbrnum(_db); 
+        return tctdbrnum(self->_db); 
     }
 
     long long fsiz() {
-        return tctdbfsiz(_db);
+        return tctdbfsiz(self->_db);
     }
 
     static const long TLARGE = 1 << 0;
@@ -82,33 +90,7 @@ class TDB {
     static const long OLCKNB = 1 << 5;
     static const long OTSYNC = 1 << 6;
 
-    
-    TCTDB *_db; 
-};
 
-%}
-
-class TDB {
-    
-    public:
-    static const long TLARGE;
-    static const long TDEFLATE;
-    static const long TBZIP;
-    static const long TTCBS;
-    static const long OREADER;
-    static const long OWRITER;
-    static const long OCREAT;
-    static const long OTRUNC;
-    static const long ONOLCK;
-    static const long OLCKNB;
-    static const long OTSYNC;
-  
-};
-
-%extend TDB { 
-    int __len__() { 
-        return self->rnum() ;
-    }
 };
 
 %pythoncode %{ 

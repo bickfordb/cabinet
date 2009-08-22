@@ -1,10 +1,10 @@
 
 all: 
 
-src/bdb.cc: src/bdb.i
+src/bdb.cc: src/bdb.i src/tcmaps.i
 	swig -c++ -I/opt/local/include -modern -python -o src/bdb.cc -outdir src/tokyocabinet src/bdb.i 
 
-src/tdb.cc: src/tdb.i
+src/tdb.cc: src/tdb.i src/tcmaps.i
 	swig -c++ -I/opt/local/include -modern -python -o src/tdb.cc -outdir src/tokyocabinet src/tdb.i 
 
 clean:
