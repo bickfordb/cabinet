@@ -4,7 +4,7 @@ import tempfile
 import time
 import unittest
 
-from tokyo.cabinet import bdb
+from tokyocabinet import bdb
 
 def assert_eq(left, right, msg="expected %(left)r == %(right)r"):
     if left != right:
@@ -53,7 +53,7 @@ class BDBTest(unittest.TestCase):
         cursor = self.db.cursor()
         cursor.first()
         assert_eq(cursor.key(), "foo")
-        assert_eq(cursor.value(), "bar")
+        assert_eq(cursor.val(), "bar")
 
     def test_put_get(self):
         self.db.put('foo', 'bar')

@@ -5,7 +5,11 @@ setup(name='tokyocabinet',
        description='Tokyo Cabinet bindings',
        packages=['tokyocabinet'],
        package_dir={'': 'src'},
-       ext_modules=[Extension('tokyocabinet._bdb',
-                       sources=['src/bdb.cc'],
-                       libraries=['tokyocabinet'])]
-)
+       ext_modules=[
+           Extension('tokyocabinet._bdb',
+               sources=['src/bdb.cc'],
+               libraries=['tokyocabinet']),
+            Extension('tokyocabinet._tdb',
+               sources=['src/tdb.cc'],
+               libraries=['tokyocabinet'])])
+
