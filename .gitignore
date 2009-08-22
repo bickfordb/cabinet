@@ -1,7 +1,7 @@
 build
 dist
 src/bdb.cc
-src/tokyo/cabinet/bdb.py
+src/tokyocabinet/bdb.py
 tests/lib
 *.swp
 *.pyc
