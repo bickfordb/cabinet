@@ -1,6 +1,8 @@
+import os
 import shutil
-import unittest
 import tempfile
+import time
+import unittest
 
 from tokyo.cabinet import bdb
 
@@ -13,6 +15,38 @@ class BDBTest(unittest.TestCase):
         self.dir = tempfile.mkdtemp()
         self.db = bdb.BDB() 
         self.db.open(self.dir + '/bdb.db', bdb.BDB.OCREAT | bdb.BDB.OREADER | bdb.BDB.OWRITER)
+
+    def test_bench(self):
+        for i in range(10000):
+            self.db[os.urandom(8).encode('hex')] = os.urandom(128).encode('hex')
+        self.db.sync()
+
+    def test_putkeep(self):
+        self.db.putkeep('foo', 'bar')
+
+    def test_putcat(self):
+        self.db.putcat('foo', 'bar')
+
+    def test_path(self):
+        assert self.db.path()
+
+    def test_len(self):
+        self.db['foo'] = 'bar'
+        assert self.db.rnum() == 1
+
+    def test_fsiz(self):
+        self.db['foo'] = 'bar'
+        assert self.db.fsiz() > 0
+
+    def test_txn(self):
+        self.db.tranbegin()
+        self.db['foo'] = 'bar'
+        self.db.tranabort()
+        assert_eq(self.db.get('foo'), None)
+        self.db.tranbegin()
+        self.db['foo'] = 'bar'
+        self.db.trancommit()
+        assert_eq(self.db['foo'], 'bar')
 
     def test_cursor(self):
         self.db.put('foo', 'bar')

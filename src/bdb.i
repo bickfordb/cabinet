@@ -174,7 +174,7 @@ class BDBCursor {
             free(buf);
             return result;
         }
-        PyObject *value() {
+        PyObject *val() {
             int sz = 0;
             void *buf = tcbdbcurval(_cur, &sz);
             PyObject *result = buf != NULL ? PyString_FromStringAndSize((const char*)buf, sz) : Py_None;
@@ -281,7 +281,7 @@ string or None
 Returns:
 string or None
 ") value;
-    PyObject *value();
+    PyObject *val();
 
 };
     
@@ -628,9 +628,9 @@ def _iter(self):
     """Iterate over all the records in the database."""
     cursor = self.cursor()
     cursor.first()
-    yield cursor.key(), cursor.value()
+    yield cursor.key(), cursor.val()
     while cursor.next():
-        yield cursor.key(), cursor.value()
+        yield cursor.key(), cursor.val()
 
 def keys(self):
     """Iterate over all the keys in the database"""
