@@ -123,6 +123,7 @@ class BDB {
                 const void *buf = tclistval(keys, i, &sz);
                 PyList_SetItem(result, i, PyString_FromStringAndSize((const char*)buf, sz));
             }
+            tclistdel(keys);
         }
         return result;
     }
@@ -299,20 +300,79 @@ class BDB {
     static const long OLCKNB;
     static const long OTSYNC;
 
-    %feature("autodoc") tune;
+    %feature("docstring", "Set the tuning parameters of a B+ tree database object.
+
+Note that the tuning parameters should be set before the database is opened.
+
+Arguments
+lmemb -- specifies the number of members in each leaf page.  If it is not more than 0, the
+   default value is specified.  The default value is 128.
+nmemb -- specifies the number of members in each non-leaf page.  If it is not more than 0, the
+   default value is specified.  The default value is 256.
+bnum --  specifies the number of elements of the bucket array.  If it is not more than 0, the
+   default value is specified.  The default value is 32749.  Suggested size of the bucket array
+   is about from 1 to 4 times of the number of all pages to be stored.
+apow -- specifies the size of record alignment by power of 2.  If it is negative, the default
+   value is specified.  The default value is 8 standing for 2^8=256.
+fpow -- specifies the maximum number of elements of the free block pool by power of 2.  If it
+   is negative, the default value is specified.  The default value is 10 standing for 2^10=1024.
+opts -- specifies options by bitwise-or: `BDBTLARGE' specifies that the size of the database
+   can be larger than 2GB by using 64-bit bucket array, `BDBTDEFLATE' specifies that each page
+   is compressed with Deflate encoding, `BDBTBZIP' specifies that each page is compressed with
+   BZIP2 encoding, `BDBTTCBS' specifies that each page is compressed with TCBS encoding.
+
+Returns
+If successful, the return value is true, else, it is false.
+") tune;
     bool tune(long lmemb, long nmemb,
                      long long bnum, long apow, long fpow, long opts) ;
     
-    %feature("autodoc") setcache;
+    %feature("docstring", "Set the caching parameters of a B+ tree database object.
+
+Note that the caching parameters should be set before the database is opened. 
+
+Arguments    
+lcnum -- specifies the maximum number of leaf nodes to be cached.  If it is not more than 0,
+the default value is specified.  The default value is 1024.
+ncnum -- specifies the maximum number of non-leaf nodes to be cached.  If it is not more than 0,
+the default value is specified.  The default value is 512.
+
+Returns
+If successful, the return value is true, else, it is false.
+") setcache;
     bool setcache(long lcnum, long ncnum);
 
-    %feature("autodoc") setmxsiz;
+    %feature("docstring", "Set the size of the extra mapped memory of a B+ tree database object.
+
+Note that the mapping parameters should be set before the database is opened.
+
+Arguments 
+xmsiz -- int, specifies the size of the extra mapped memory.  If it is not more than 0, the extra
+mapped memory is disabled.  It is disabled by default.
+
+Returns
+If successful, the return value is true, else, it is false.
+") setxmsiz;
     bool setxmsiz(long long xmsiz);
 
-    %feature("autodoc") open;
-    bool open(const char* path, long omode) ;
+    %feature("docstring", "Open a database file and connect a B+ tree database object.
 
-    %feature("autodoc") close;
+Arguments
+path -- str, specifies the path of the database file.
+omode -- int, specifies the connection mode: `BDBOWRITER' as a writer, `BDBOREADER' as a reader.
+If the mode is `BDBOWRITER', the following may be added by bitwise-or: `BDBOCREAT', which
+means it creates a new database if not exist, `BDBOTRUNC', which means it creates a new
+database regardless if one exists, `BDBOTSYNC', which means every transaction synchronizes
+updated contents with the device.  Both of `BDBOREADER' and `BDBOWRITER' can be added to by
+bitwise-or: `BDBONOLCK', which means it opens the database file without file locking, or
+`BDBOLCKNB', which means locking is performed without blocking.
+
+Returns
+If successful, the return value is true, else, it is false.
+") open;
+bool open(const char* path, long omode) ;
+
+    %feature("docstring") close;
     bool close();
     
     %apply (char *STRING, int LENGTH) { (const void *key, int key_size) };
@@ -328,70 +388,230 @@ Returns:
 boolean") put;
     bool put(const std::string & key, const std::string & value);
 
-    %feature("autodoc") putkeep;
+    %feature("docstring", "Store a new record into a B+ tree database object.
+
+If a record with the same key exists in the database, this function has no effect. 
+
+Arguments
+key -- str, the key
+value -- str, the value
+
+Returns
+If successful, the return value is true, else, it is false.
+") putkeep;
     bool putkeep(const std::string & key, const std::string & value);
 
-    %feature("docstring", "Concatenate a value at the end of the existing record in a B+ tree database object.") putcat;
+    %feature("docstring", "Concatenate a value at the end of the existing record in a B+ tree database object.
+
+If there is no corresponding record, a new record is created. 
+
+Arguments
+key -- str, the key
+value -- str, the value
+
+Returns
+If successful, the return value is true, else, it is false.
+") putcat;
     bool putcat(const std::string & key, const std::string & value);
     
-    %feature("autodoc") out;
+    %feature("docstring", "Remove a record of a B+ tree database object.
+
+If the key of duplicated records is specified, the first one is selected.
+
+Arguments
+key -- str, the key
+
+Returns
+If successful, the return value is true, else, it is false.
+") out;
     bool out(const std::string & key) ;
 
-    %feature("autodoc") get;
+    %feature("docstring", "Retrieve a record in a B+ tree database object.
+ 
+If the key of duplicated records is specified, the first one is selected.  
+
+Arguments
+key -- str, the key 
+
+Returns
+The value or None
+") get;
     PyObject * get(const std::string & key);
     
-    %feature("autodoc") vsiz;
+    %feature("docstring", "Get the size of the value of a record in a B+ tree
+%database object.
+
+If the key of duplicated records is specified, the first one is selected. 
+
+Returns
+key -- str, the key
+
+Returns
+If successful, the return value is the size of the value of the corresponding record, else,
+it is -1.
+") vsiz;
     long vsiz(const std::string & key);
 
-    %feature("autodoc") addint;
+    %feature("docstring", "Add an integer to a record in a B+ tree database object.
+
+If the corresponding record exists, the value is treated as an integer and is added to.  If no
+record corresponds, a new record of the additional value is stored. 
+
+Arguments
+key -- str, specifies the pointer to the region of the key.
+num -- int, specifies the additional value.
+
+Returns
+If successful, the return value is the summation value, else, it is `INT_MIN'.
+
+") addint;
     long addint(const std::string & key, long num);
 
-    %feature("autodoc") adddouble;
+    %feature("docstring", "Add a real number to a record in a B+ tree database object.
+
+If the corresponding record exists, the value is treated as a real number and
+is added to.  If no record corresponds, a new record of the additional value is
+stored. 
+
+Arguments
+key -- str, the key
+num -- int, the additional value
+
+Returns
+If successful, the return value is the summation value, else, it is Not-a-Number.
+") adddouble;
     double adddouble(const std::string & key, double num) ;
 
-    %feature("autodoc") sync;
+    %feature("docstring", "Synchronize updated contents of a B+ tree database object with the file and the device.
+
+This function is useful when another process connects to the same database file.
+
+Returns
+If successful, the return value is true, else, it is false.
+") sync;
     bool sync() ;
 
-    %feature("autodoc") optimize;
+    %feature("docstring", "Optimize the file of a B+ tree database object.
+
+This function is useful to reduce the size of the database file with data
+fragmentation by successive updating.
+
+Arguments
+lmemb -- int, specifies the number of members in each leaf page.  If it is not more than 0, the
+current setting is not changed.
+nmemb -- int, specifies the number of members in each non-leaf page.  If it is not more than 0, the
+current setting is not changed.
+bnum -- int, specifies the number of elements of the bucket array.  If it is not more than 0, the
+default value is specified.  The default value is two times of the number of pages.
+apow -- int, specifies the size of record alignment by power of 2.  If it is negative, the current
+setting is not changed.
+fpow -- int, specifies the maximum number of elements of the free block pool by power of 2.  If it
+is negative, the current setting is not changed.
+opts -- int, specifies options by bitwise-or: `BDBTLARGE' specifies that the size of the database
+can be larger than 2GB by using 64-bit bucket array, `BDBTDEFLATE' specifies that each record
+is compressed with Deflate encoding, `BDBTBZIP' specifies that each page is compressed with
+BZIP2 encoding, `BDBTTCBS' specifies that each page is compressed with TCBS encoding.  If it
+is `UINT8_MAX', the current setting is not changed.
+
+Returns
+If successful, the return value is true, else, it is false.
+") optimize;
     bool optimize(TCBDB *bdb, int32_t lmemb, int32_t nmemb,
                    int64_t bnum, int8_t apow, int8_t fpow, uint8_t opts);
 
-    %feature("autodoc") vanish;
+    %feature("docstring", "Remove all records of a B+ tree database object.
+   `bdb' specifies the B+ tree database object connected as a writer.
+   If successful, the return value is true, else, it is false. ") vanish;
     bool vanish();
 
-    %feature("autodoc") copy;
+    %feature("docstring", "Copy the database file of a B+ tree database object.
+
+The database file is assured to be kept synchronized and not modified while the
+copying or executing operation is in progress.  So, this function is useful to
+create a backup file of the database file. 
+
+Arguments
+path -- str, specifies the path of the destination file.  If it begins with `@', the trailing
+substring is executed as a command line.
+
+Returns
+If successful, the return value is true, else, it is false.  False is returned if the executed
+command returns non-zero code.
+") copy;
     bool copy(const std::string & path);
 
-    %feature("autodoc") tranbegin;
+    %feature("docstring", "Begin the transaction of a B+ tree database object.
+
+The database is locked by the thread while the transaction so that only one
+transaction can be activated with a database object at the same time.  Thus,
+the serializable isolation level is assumed if every database operation is
+performed in the transaction.  Because all pages are cached on memory while the
+transaction, the amount of referred records is limited by the memory capacity.
+If the database is closed during transaction, the transaction is aborted
+implicitly.
+
+Returns
+If successful, the return value is true, else, it is false.
+   ") tranbegin;
     bool tranbegin();
 
-    %feature("autodoc") trancommit;
+    %feature("docstring", "Commit the transaction of a B+ tree database object.
+
+Update in the transaction is fixed when it is committed successfully.
+
+Returns
+If successful, the return value is true, else, it is false.
+") trancommit;
     bool trancommit();
 
-    %feature("autodoc") tranabort;
+    %feature("docstring", "Abort the transaction of a B+ tree database object.
+
+Update in the transaction is discarded when it is aborted.  The state of the
+database is rollbacked to before transaction.
+
+Returns
+If successful, the return value is true, else, it is false.
+") tranabort;
     bool tranabort();
 
-    %feature("autodoc") path;
+    %feature("docstring", "Get the file path of a B+ tree database object.
+
+Returns
+The return value is the path of the database file or `NULL' if the object does
+not connect to any database file.") path;
     const char *path();
 
-    %feature("autodoc") rnum;
+    %feature("docstring", "Get the number of records of a B+ tree database object.
+
+Returns
+The return value is the number of records or 0 if the object does not connect
+to any database file.") rnum;
     long long rnum();
 
-    %feature("autodoc") fsiz;
+    %feature("docstring", "Get the size of the database file of a B+ tree database object.
+
+Returns
+The return value is the size of the database file or 0 if the object does not connect to any
+database file.") fsiz;
     long long fsiz();
 
 
-    %feature("autodoc") fwmkeys;
+    %feature("docstring", "Get forward matching keys in a B+ tree database object.
+
+Arguments
+prefix -- str, the key prefix
+max -- int, specifies the maximum number of keys to be fetched.  If it is negative, no limit is
+specified.
+
+Returns
+The return value is a list object of the corresponding keys.  This function does never fail
+and return an empty list even if no key corresponds.
+") fwmkeys;
     PyObject *fwmkeys(const std::string & prefix, int max=-1);
 
 };
 
 %extend BDB { 
-    %newobject cursor;
-    BDBCursor *cursor() { 
-        return new BDBCursor(self);
-    }
-
     int __len__() { 
         return self->rnum() ;
     }
@@ -399,6 +619,11 @@ boolean") put;
 };
 
 %pythoncode %{ 
+
+def cursor(self):
+    """Get a cursor for this database"""
+    return BDBCursor(self)
+
 def _iter(self):
     """Iterate over all the records in the database."""
     cursor = self.cursor()
@@ -407,17 +632,17 @@ def _iter(self):
     while cursor.next():
         yield cursor.key(), cursor.value()
 
-def _keys(self):
+def keys(self):
     """Iterate over all the keys in the database"""
     for k, v in self:
         yield k
 
-def _values(self): 
+def values(self): 
     """Iterate over all the values in the database"""
     for k, v in self:
         yield v
 
-def _getitem(self, key):
+def getitem(self, key):
     val = self.get(key)
     if val is None:
         raise KeyError(key)
@@ -426,14 +651,16 @@ def _getitem(self, key):
 
 BDB.__iter__ = _iter
 BDB.items = _iter
-BDB.keys = _keys
-BDB.values = _values
-BDB.__getitem__ = _getitem
+BDB.keys = keys
+BDB.values = values
+BDB.__getitem__ = getitem
 BDB.__setitem__ = BDB.put
+BDB.cursor = cursor
 
+del cursor
 del _iter
-del _keys
-del _values
-del _getitem
+del keys
+del values
+del getitem
 
 %}
