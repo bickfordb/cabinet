@@ -176,6 +176,255 @@ connect to any database file. ") fsiz;
         return tctdbfsiz(self->_db);
     }
 
+    %feature("docstring", "Store a new record into a table database object.
+
+If a record with the same key exists in the database, this function has no effect.
+
+Arguments
+key -- str, the primary key
+cols -- dict, the columns / values
+
+Returns
+If successful, the return value is true, else, it is false.
+") putkeep;
+    bool putkeep(const std::string & pk, TCMAP *cols) { 
+        return tctdbputkeep(self->_db, pk.c_str(), pk.length(), cols);
+    }
+
+    %feature("docstring", "Concatenate columns of the existing record in a table database object.
+
+If there is no corresponding record, a new record is created. 
+
+Arguments
+key -- str, the primary key
+cols -- dict, the columns / values to set
+
+Returns
+If successful, the return value is true, else, it is false.
+") putcat;
+    bool putcat(const std::string & pk, TCMAP *cols) {
+        return tctdbputcat(self->_db, pk.c_str(), pk.length(), cols);
+   } 
+
+   %feature("docstring" , "Remove a record of a table database object.
+
+Arguments
+key -- str, the primary key
+
+Returns
+If successful, the return value is true, else, it is false. 
+") out;
+    bool out(const std::string & pk) { 
+        return tctdbout(self->_db, pk.c_str(), pk.length());
+    }
+
+    %feature("docstring", "Get the size of the value of a record in a table database object.
+
+Arguments
+pk -- str, the primary key
+
+Returns
+If successful, the return value is the size of the value of the corresponding
+record, else, it is -1.") vsiz;
+    int vsiz(const std::string & pk) { 
+        return tctdbvsiz(self->_db, pk.c_str(), pk.length());
+    }
+    %feature("docstring", "Initialize the iterator of a table database object.
+
+   The iterator is used in order to access the primary key of every record stored in a
+   database.
+
+   Returns
+   If successful, the return value is true, else, it is false.
+    ") iterinit;
+    bool iterinit () {
+        return tctdbiterinit(self->_db);
+    }
+
+    %feature("docstring", "Get the next primary key of the iterator of a table database object.
+
+It is possible to access every record by iteration of calling this function.
+It is allowed to update or remove records whose keys are fetched while the iteration.
+However, it is not assured if updating the database is occurred while the iteration.  Besides,
+the order of this traversal access method is arbitrary, so it is not assured that the order of
+storing matches the one of the traversal access.
+
+Returns
+The next primary key or None
+") iternext;
+    %newobject iternext;
+    std::string *iternext() {
+        int sp;
+        void *buf = tctdbiternext(self->_db, &sp);
+        if (buf != NULL) { 
+            return new std::string((const char*)buf, sp); 
+        } else { 
+            return NULL;
+        }
+    }
+    
+    %feature("docstring", "Get forward matching primary keys in a table database object.
+
+
+Note that this function may be very slow because every key in the database is scanned.
+
+Arguments
+prefix -- str, the primary key prefix
+max -- specifies the maximum number of keys to be fetched.  If it is negative, no limit is
+specified.
+
+Returns
+The return value is a list object of the corresponding keys.  This function does never fail
+and return an empty list even if no key corresponds.
+") fwmkeys;
+    TCLIST *fwmkeys(const string & pk, int max=-1) {
+        return tctdbfwmkeys(self->_db, pk.c_str(), pk.length(), max);
+    }
+
+    %feature("docstring", "Add an integer to a column of a record in a table database object.
+
+If successful, the return value is the summation value, else, it is `INT_MIN'.
+The additional value is stored as a decimal string value of a column whose name
+is '_num'.  If no record corresponds, a new record with the additional value is
+stored.
+
+Arguments 
+key -- str, the primary key
+num -- int, the number to add
+    ") addint;
+    int addint(const string & key, int num) {
+        return tctdbaddint(self->_db, key.c_str(), key.length(), num);
+    }
+    %feature("docstring", "Add a real number to a column of a record in a table database object.
+
+If successful, the return value is the summation value, else, it is
+Not-a-Number.  The additional value is stored as a decimal string value of a
+column whose name is '_num'.  If no record corresponds, a new record with the
+additional value is stored. 
+
+Arguments
+key -- str, the primary key
+num -- float, the number to add
+") adddouble;   
+    double adddouble(const string & key, double num) {
+        return tctdbadddouble(self->_db, key.c_str(), key.length(), num);
+    }
+        
+    %feature("docstring", "Synchronize updated contents of a table database object with the file and the device.
+
+If successful, the return value is true, else, it is false.
+This function is useful when another process connects to the same database file.") sync;
+    bool sync() { return tctdbsync(self->_db); }
+
+    %feature("docstring", "Optimize the file of a table database object.
+
+This function is useful to reduce the size of the database file with data fragmentation by
+successive updating. 
+
+Arguments
+bnum -- specifies the number of elements of the bucket array.  If it is not more than 0, the
+default value is specified.  The default value is two times of the number of records.
+apow -- specifies the size of record alignment by power of 2.  If it is negative, the current
+setting is not changed.
+fpow -- specifies the maximum number of elements of the free block pool by power of 2.  If it
+is negative, the current setting is not changed.
+opts -- specifies options by bitwise-or: `BDBTLARGE' specifies that the size of the database
+can be larger than 2GB by using 64-bit bucket array, `BDBTDEFLATE' specifies that each record
+is compressed with Deflate encoding, `BDBTBZIP' specifies that each record is compressed with
+BZIP2 encoding, `BDBTTCBS' specifies that each record is compressed with TCBS encoding.  If it
+is `UINT8_MAX', the current setting is not changed.
+
+Returns
+If successful, the return value is true, else, it is false.
+") optimize;
+    bool optimize(int64_t bnum, int8_t apow, int8_t fpow, uint8_t opts) { 
+        return tctdboptimize(self->_db, bnum, apow, fpow, opts);
+    }
+
+    %feature("docstring", "Remove all records of a table database object.
+
+   If successful, the return value is true, else, it is false. ") vanish;
+   bool vanish() { return tctdbvanish(self->_db); } 
+
+   %feature("docstring", "Copy the database file of a table database object.
+
+The database file is assured to be kept synchronized and not modified while the copying or
+executing operation is in progress.  So, this function is useful to create a backup file of
+the database file.
+
+Arguments 
+path -- specifies the path of the destination file.  If it begins with `@', the trailing
+substring is executed as a command line.
+
+Returns
+If successful, the return value is true, else, it is false.  False is returned if the executed
+command returns non-zero code.");   
+    bool copy(const char *path) { 
+        return tctdbcopy(self->_db, path);
+    }
+
+    %feature("docstring", "Begin the transaction of a table database object.
+
+The database is locked by the thread while the transaction so that only one
+transaction can be activated with a database object at the same time.  Thus,
+the serializable isolation level is assumed if every database operation is
+performed in the transaction.  Because all pages are cached on memory while the
+transaction, the amount of referred records is limited by the memory capacity.
+If the database is closed during transaction, the transaction is aborted
+implicitly.
+
+Returns
+If successful, the return value is true, else, it is false.
+") tranbegin;
+    bool tranbegin() {
+        return tctdbtranbegin(self->_db);
+    }
+
+    %feature("docstring", "Commit the transaction of a table database object.
+
+If successful, the return value is true, else, it is false.
+Update in the transaction is fixed when it is committed successfully. 
+") trancommit;
+    bool trancommit() { 
+        return tctdbtrancommit(self->_db);
+    }
+
+    %feature("docstring", "Abort the transaction of a table database object.
+
+Update in the transaction is discarded when it is aborted.  The state of the database is
+rollbacked to before transaction.
+
+Returns
+If successful, the return value is true, else, it is false.
+") tranabort;
+    bool tranabort() { 
+        return tctdbtranabort(self->_db);
+    }
+    %feature("docstring", "Set a column index to a table database object.
+
+Note that the setting indexes should be set after the database is opened.
+
+Arguments
+name -- specifies the name of a column.  If the name of an existing index is specified, the
+   index is rebuilt.  An empty string means the primary key.
+type -- specifies the index type: `TDBITLEXICAL' for lexical string, `TDBITDECIMAL' for decimal
+   string.  If it is `TDBITOPT', the index is optimized.  If it is `TDBITVOID', the index is
+   removed.  If `TDBITKEEP' is added by bitwise-or and the index exists, this function merely
+   returns failure.
+Returns
+If successful, the return value is true, else, it is false.
+") setindex;
+    bool setindex(const string & name, int type) {
+        return tctdbsetindex(self->_db, name.c_str(), type);
+    }
+
+    %feature("docstring", "Generate a unique ID number of a table database object.
+
+Returns
+The return value is the new unique ID number or -1 on failure.
+") genuid;
+    int64_t genuid() { return tctdbgenuid(self->_db); }
+
     static const long TLARGE = 1 << 0;
     static const long TDEFLATE = 1 << 1;
     static const long TBZIP = 1 << 2;
@@ -187,7 +436,13 @@ connect to any database file. ") fsiz;
     static const long ONOLCK = 1 << 4;
     static const long OLCKNB = 1 << 5;
     static const long OTSYNC = 1 << 6;
-
+    static const long ITLEXICAL = 0;
+    static const long ITDECIMAL = 1;
+    static const long ITTOKEN = 2;
+    static const long ITQGRAM = 3;
+    static const long ITOPT = 9998;
+    static const long ITVOID = 9999;
+    static const long ITKEEP = 1 << 24;
 
 };
 

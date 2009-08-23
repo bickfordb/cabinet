@@ -69,3 +69,22 @@
         }
     }
 }
+
+%typemap(out) TCLIST * { 
+    if ($1 == NULL) { 
+        $result = Py_None;
+    } else { 
+        $result = PyList_New(0);
+        for (int i = 0; i < tclistnum($1); i++) {
+            int sz = 0;
+            const void *buf = tclistval($1, i, &sz);
+            PyObject *val = PyString_FromStringAndSize((const char *)buf, sz);
+            PyList_Append($result, val);
+        }
+    }
+}
+
+%typemap(newfree) TCLIST * {
+    if ($1 != NULL) 
+        tclistdel($1);
+}
