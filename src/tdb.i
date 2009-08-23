@@ -8,13 +8,11 @@
 #include <tctdb.h>
 #include <string>
 #include <map>
+#include <iostream>
 
 using namespace std;
 typedef std::map<std::string, std::string> StringMap;
 typedef std::pair<std::string, std::string> StringPair;
-
-class TDBQuery;
-class TDB;
 
 class TDB {
     public:
@@ -28,6 +26,17 @@ class TDB {
     TCTDB *_db; 
 };
 
+class TDBQuery {
+    public:
+    TDBQuery(TDB *db) {
+        _q = tctdbqrynew(db->_db);
+    }
+    ~TDBQuery() {
+        if (_q != NULL) 
+            tctdbqrydel(_q);
+    }
+    TDBQRY *_q;
+};
 %}
 
 class TDB {
@@ -277,7 +286,7 @@ Returns
 The return value is a list object of the corresponding keys.  This function does never fail
 and return an empty list even if no key corresponds.
 ") fwmkeys;
-    TCLIST *fwmkeys(const string & pk, int max=-1) {
+    TCLIST *fwmkeys(const std::string & pk, int max=-1) {
         return tctdbfwmkeys(self->_db, pk.c_str(), pk.length(), max);
     }
 
@@ -292,7 +301,7 @@ Arguments
 key -- str, the primary key
 num -- int, the number to add
     ") addint;
-    int addint(const string & key, int num) {
+    int addint(const std::string & key, int num) {
         return tctdbaddint(self->_db, key.c_str(), key.length(), num);
     }
     %feature("docstring", "Add a real number to a column of a record in a table database object.
@@ -306,7 +315,7 @@ Arguments
 key -- str, the primary key
 num -- float, the number to add
 ") adddouble;   
-    double adddouble(const string & key, double num) {
+    double adddouble(const std::string & key, double num) {
         return tctdbadddouble(self->_db, key.c_str(), key.length(), num);
     }
         
@@ -414,7 +423,7 @@ type -- specifies the index type: `TDBITLEXICAL' for lexical string, `TDBITDECIM
 Returns
 If successful, the return value is true, else, it is false.
 ") setindex;
-    bool setindex(const string & name, int type) {
+    bool setindex(const std::string & name, int type) {
         return tctdbsetindex(self->_db, name.c_str(), type);
     }
 
@@ -446,6 +455,196 @@ The return value is the new unique ID number or -1 on failure.
 
 };
 
+class TDBQuery { 
+    public:
+    TDBQuery(TDB *tdb) ;
+    ~TDBQuery(); 
+
+};
+
+
+%extend TDBQuery {
+
+    %feature("docstring", "Add a narrowing condition to a query object.
+
+Arguments
+qry -- specifies the query object.
+name -- specifies the name of a column.  An empty string means the primary key.
+op -- specifies an operation type: `TDBQCSTREQ' for string which is equal to the expression,
+`TDBQCSTRINC' for string which is included in the expression, `TDBQCSTRBW' for string which
+begins with the expression, `TDBQCSTREW' for string which ends with the expression,
+`TDBQCSTRAND' for string which includes all tokens in the expression, `TDBQCSTROR' for string
+which includes at least one token in the expression, `TDBQCSTROREQ' for string which is equal
+to at least one token in the expression, `TDBQCSTRRX' for string which matches regular
+expressions of the expression, `TDBQCNUMEQ' for number which is equal to the expression,
+`TDBQCNUMGT' for number which is greater than the expression, `TDBQCNUMGE' for number which is
+greater than or equal to the expression, `TDBQCNUMLT' for number which is less than the
+expression, `TDBQCNUMLE' for number which is less than or equal to the expression, `TDBQCNUMBT'
+for number which is between two tokens of the expression, `TDBQCNUMOREQ' for number which is
+equal to at least one token in the expression.  All operations can be flagged by bitwise-or:
+`TDBQCNEGATE' for negation, `TDBQCNOIDX' for using no index.
+expr -- specifies an operand exression.") addcond;
+    void addcond(const char *name, int op, const char *expr) { 
+        tctdbqryaddcond(self->_q, name, op, expr);
+   }
+    %feature("docstring", "Set the order of a query object.
+
+Arguments
+qry -- specifies the query object.
+name -- specifies the name of a column.  An empty string means the primary key.
+type -- specifies the order type: `TDBQOSTRASC' for string ascending, `TDBQOSTRDESC' for
+string descending, `TDBQONUMASC' for number ascending, `TDBQONUMDESC' for number descending.
+") setorder;
+    void setorder(const char* name, int type) {
+        tctdbqrysetorder(self->_q, name, type);
+    }
+
+    %feature("docstring", "Set the limit number of records of the result of a query object.
+
+Arguments
+qry -- specifies the query object.
+max -- specifies the maximum number of records of the result.  If it is negative, no limit is
+specified.
+skip -- specifies the number of skipped records of the result.  If it is not more than 0, no
+record is skipped. 
+") setlimit;
+    void setlimit(int max, int skip) { 
+        tctdbqrysetlimit(self->_q, max, skip);
+    }
+
+    %feature("docstring", "Execute the search of a query object.
+
+Returns
+The return value is a list object of the primary keys of the corresponding records.  This
+function does never fail and return an empty list even if no record corresponds.
+") search;
+    %newobject search;
+    TCLIST *search() {
+        return tctdbqrysearch(self->_q);
+    }
+
+    %feature("docstring", "Remove each record corresponding to a query object.
+
+Returns
+If successful, the return value is true, else, it is false.") searchout;
+   bool searchout() {
+        return tctdbqrysearchout(self->_q);
+    }
+
+    %feature("docstring", "Get the hint of a query object.
+
+Returns
+The return value is the hint string.
+") hint;
+    const char *hint() { 
+        return tctdbqryhint(self->_q);
+    }
+
+    static const long QCSTREQ = 0;
+    static const long QCSTRINC = 1;
+    static const long QCSTRBW = 2;
+    static const long QCSTREW = 3;
+    static const long QCSTRAND = 4;
+    static const long QCSTROR = 5;
+    static const long QCSTROREQ = 6;
+    static const long QCSTRRX = 7;
+    static const long QCNUMEQ = 8;
+    static const long QCNUMGT = 9;
+    static const long QCNUMGE = 10;
+    static const long QCNUMLT = 11;
+    static const long QCNUMLE = 12;
+    static const long QCNUMBT = 13;
+    static const long QCNUMOREQ = 14;
+    static const long QCFTSPH = 15;
+    static const long QCFTSAND = 16;
+    static const long QCFTSOR = 17;
+    static const long QCFTSEX = 18;
+    static const long QCNEGATE = 1 << 24;
+    static const long QCNOIDX = 1 << 25;
+    static const long QOSTRASC = 0;
+    static const long QOSTRDESC = 1;
+    static const long QONUMASC = 2;
+    static const long QONUMDESC = 3;
+    static const long MSUNION = 0;
+    static const long MSISECT = 1;
+    static const long MSDIFF = 2;
+
+};
+
 %pythoncode %{ 
+
+def metasearch(self, other_queries, setop): 
+    """Search over multiple queries, including this one.
+
+    Arguments
+    other_queries -- TDBQuery, the other queries to search for.
+    setop -- int, a set operation. One of MSUNION, MSISECT, MSDIFF 
+    """
+    def _metasearch():
+        yield set(self.search())
+        for q in other_queries:
+            yield set(q.search())
+
+    set_func = {
+       self.MSUNION: set.union,
+       self.MSISECT: set.intersection,
+       self.MSDIFF: set.difference,
+    }[setop]
+    return reduce(set_func, _metasearch()) if other_queries else set()
+
+TDBQuery.metasearch = metasearch
+
+del metasearch
+
+def items(self):
+    self.iterinit()
+    while True:
+        key = self.iternext()
+        if key is None:
+            break
+        else:
+            yield (key, self.get(key))
+
+TDB.items = items
+
+del items
+
+def __setitem__(self, key, val): 
+    self.set(key, val)
+
+TDB.__setitem__ = __setitem__
+
+del __setitem__
+
+def __getitem__(self, key):
+    val = self.get(key)
+    if val is None:
+        raise KeyEror(key)
+    return val
+
+TDB.__getitem__ = __getitem__
+
+del __getitem__
+
+def keys(self): 
+    """Iterate over all the keys"""
+    self.iterinit()
+    while True:
+        key = self.iternext()
+        if key is None:
+            break
+        yield key
+
+TDB.keys = keys
+del keys
+
+def values(self):
+    """Iterator over all the values"""
+    for k, v in self.items():
+        yield v
+
+TDB.values = values
+del values
+
 
 %}
