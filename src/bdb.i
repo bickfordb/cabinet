@@ -1,6 +1,8 @@
 %module(docstring="The B+ tree database API of Tokyo Cabinet", module="tokyocabinet") bdb
 %include "std_string.i"
 %include "typemaps.i"
+%include "tcmaps.i"
+%include "ecode.i"
 
 %{
 #define SWIG_FILE_WITH_INIT
@@ -10,7 +12,7 @@
 class BDBCursor;
 class BDB;
 
-class BDB {
+class BDB : ECODE {
     public:
     BDB() { 
         this->_db = tcbdbnew();
@@ -50,16 +52,15 @@ class BDB {
     bool out(const std::string & key) {
         return tcbdbout(_db, key.c_str(), key.length());
     }
-    PyObject * get(const std::string & key) {
+
+    std::string* get(const std::string & key) {
         int value_size = 0;
         void *value = tcbdbget(_db, key.c_str(), key.length(), &value_size);    
+        std::string *result = NULL;
         if (value != NULL) {
-            PyObject *result = PyString_FromStringAndSize((const char*) value, value_size);
-            free(value);
-            return result;
-        } else { 
-            return Py_None;
-        } 
+            result = new std::string((const char*)value, value_size);
+        }
+        return result;
     }
     long vsiz(const std::string & key) { 
         return tcbdbvsiz(_db, key.c_str(), key.length());
@@ -112,20 +113,19 @@ class BDB {
     bool putcat(const std::string & key, const std::string & value) {
         return tcbdbputcat(_db, key.c_str(), key.length(), value.c_str(), value.length());
     }
-    PyObject *fwmkeys(const std::string & prefix, int max=-1) {
-        PyObject *result = Py_None;
-        TCLIST *keys = tcbdbfwmkeys(_db, (const char*)prefix.c_str(), prefix.length(), max);
-        if (keys != NULL) {
-            int num = tclistnum(keys);
-            result = PyList_New(num);
-            for (int i = 0; i < num; i++) {
-                int sz = 0;
-                const void *buf = tclistval(keys, i, &sz);
-                PyList_SetItem(result, i, PyString_FromStringAndSize((const char*)buf, sz));
-            }
-            tclistdel(keys);
+    TCLIST *fwmkeys(const std::string & prefix, int max=-1) {
+        return tcbdbfwmkeys(_db, prefix.c_str(), prefix.length(), max);
+    }
+
+    const char * errmsg(long ecode=-1) {
+        if (ecode == -1) { 
+            ecode = tcbdbecode(_db);
         }
-        return result;
+        return tcbdberrmsg(ecode);
+    }
+
+    long ecode() { 
+        return tcbdbecode(_db);
     }
 
     static const long TLARGE = 1 << 0;
@@ -140,7 +140,6 @@ class BDB {
     static const long OLCKNB = 1 << 5;
     static const long OTSYNC = 1 << 6;
 
-    
     TCBDB *_db; 
 };
 
@@ -167,17 +166,17 @@ class BDBCursor {
             return tcbdbcurput(_cur,  (const void *)value.c_str(), value.length(), cpmode);
         }
 
-        PyObject *key() {
+        std::string *key() {
             int sz = 0;
             void *buf = tcbdbcurkey(_cur, &sz);
-            PyObject *result = buf != NULL ? PyString_FromStringAndSize((const char*)buf, sz) : Py_None;
+            std::string *result = buf != NULL ? new std::string((const char*)buf, sz) : NULL;
             free(buf);
             return result;
         }
-        PyObject *val() {
+        std::string *val() {
             int sz = 0;
             void *buf = tcbdbcurval(_cur, &sz);
-            PyObject *result = buf != NULL ? PyString_FromStringAndSize((const char*)buf, sz) : Py_None;
+            std::string *result = buf != NULL ? new std::string((const char*)buf, sz) : NULL;
             free(buf);
             return result;
         }
@@ -200,6 +199,7 @@ class BDBCursor {
     static const long CPBEFORE;
     static const long CPAFTER;
 
+    %pythonappend BDBCursor(BDB *db) "self.__db = args[0]"
     BDBCursor(BDB *);
     ~BDBCursor();
     %feature("docstring", "Move a cursor object to the first record.
@@ -274,18 +274,20 @@ is at invalid position.
 Returns:
 string or None
 ") key;
-    PyObject *key();
+    %newobject key;
+    std::string *key();
 
     %feature("docstring", "Get the value of the record where the cursor object is.
 
 Returns:
 string or None
 ") value;
-    PyObject *val();
+    %newobject val;
+    std::string *val();
 
 };
     
-class BDB {
+class BDB : ECODE {
     
     public:
     static const long TLARGE;
@@ -370,14 +372,11 @@ bitwise-or: `BDBONOLCK', which means it opens the database file without file loc
 Returns
 If successful, the return value is true, else, it is false.
 ") open;
-bool open(const char* path, long omode) ;
+    bool open(const char* path, long omode) ;
 
     %feature("docstring") close;
     bool close();
     
-    %apply (char *STRING, int LENGTH) { (const void *key, int key_size) };
-    %apply (char *STRING, int LENGTH) { (const void *value, int value_size) };
-
     %feature("docstring", "Store a new record into a B+ tree database object.
 
 Arguments:
@@ -436,7 +435,8 @@ key -- str, the key
 Returns
 The value or None
 ") get;
-    PyObject * get(const std::string & key);
+    %newobject get;
+    std::string * get(const std::string & key);
     
     %feature("docstring", "Get the size of the value of a record in a B+ tree
 %database object.
@@ -607,7 +607,8 @@ Returns
 The return value is a list object of the corresponding keys.  This function does never fail
 and return an empty list even if no key corresponds.
 ") fwmkeys;
-    PyObject *fwmkeys(const std::string & prefix, int max=-1);
+    %newobject fwmkeys;
+    TCLIST *fwmkeys(const std::string & prefix, int max=-1);
 
 };
 

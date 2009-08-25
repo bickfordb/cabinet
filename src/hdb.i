@@ -2,13 +2,14 @@
 %include "typemaps.i"
 %include "std_string.i"
 %include "tcmaps.i"
+%include "ecode.i"
 
 %{
 #define SWIG_FILE_WITH_INIT
 #include <tchdb.h>
 #include <string>
 
-class HDB {
+class HDB : ECODE {
     public:
     HDB() { 
         this->_db = tchdbnew();
@@ -17,11 +18,20 @@ class HDB {
         if (this->_db) tchdbdel(_db);
     }
     TCHDB *_db;
+
+    const char * errmsg(long ecode=-1) {
+        if (ecode == -1)
+            ecode = tchdbecode(_db);
+        return tchdberrmsg(ecode);
+    }
+    long ecode() { 
+        return tchdbecode(_db);
+    }
 };
 
 %}
 
-class HDB {
+class HDB : ECODE {
     public:
     HDB();
     ~HDB();

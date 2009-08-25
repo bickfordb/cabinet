@@ -2,13 +2,13 @@
 %include "typemaps.i"
 %include "std_string.i"
 %include "tcmaps.i"
-
+%include "ecode.i"
 %{
 #define SWIG_FILE_WITH_INIT
 #include <tcfdb.h>
 #include <string>
 
-class FDB {
+class FDB : ECODE {
     public:
     FDB() { 
         this->_db = tcfdbnew();
@@ -16,12 +16,23 @@ class FDB {
     ~FDB() {
         if (this->_db) tcfdbdel(_db);
     }
+
+    const char * errmsg(long ecode=-1) {
+        if (ecode == -1) 
+            ecode = tcfdbecode(_db);
+        return tcfdberrmsg(ecode);
+    }
+
+    long ecode() {
+        return tcfdbecode(_db);
+    }
+
     TCFDB *_db;
 };
 
 %}
 
-class FDB {
+class FDB : ECODE {
     public:
     FDB();
     ~FDB();
@@ -56,17 +67,7 @@ class FDB {
     bool out(long long key) { 
         return tcfdbout(self->_db, key); 
     } 
-
-    int ecode() { 
-        return tcfdbecode(self->_db);
-    }
-
-    const char *errmsg(int ecode=-1) {
-        if (ecode == -1) {
-            ecode = tcfdbecode(self->_db);
-        }
-        return tcfdberrmsg(ecode);
-    }
+    
 
     %newobject get;
     std::string *get(long long key) { 

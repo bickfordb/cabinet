@@ -2,6 +2,7 @@
 %include "std_string.i"
 %include "tcmaps.i"
 %include "typemaps.i"
+%include "ecode.i"
 
 %{
 #define SWIG_FILE_WITH_INIT
@@ -10,13 +11,21 @@
 
 using namespace std;
 
-class TDB {
+class TDB : ECODE {
     public:
     TDB() { 
         _db = tctdbnew();
     }
     ~TDB() {
         if (_db != NULL) tctdbdel(_db);
+    }
+
+    long ecode() { return tctdbecode(_db); }
+
+    const char * errmsg(long ecode=-1) { 
+        if (ecode == -1) 
+            ecode = tctdbecode(_db);
+        return tctdberrmsg(ecode);
     }
 
     TCTDB *_db; 
@@ -35,7 +44,7 @@ class TDBQuery {
 };
 %}
 
-class TDB {
+class TDB : ECODE {
 };
 
 %extend TDB { 
