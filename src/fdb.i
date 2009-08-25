@@ -61,8 +61,8 @@ class FDB {
         return tcfdbecode(self->_db);
     }
 
-    const char *errmsg(int ecode=-1) { 
-        if (ecode = -1) { 
+    const char *errmsg(int ecode=-1) {
+        if (ecode == -1) {
             ecode = tcfdbecode(self->_db);
         }
         return tcfdberrmsg(ecode);
