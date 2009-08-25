@@ -7,12 +7,8 @@
 #define SWIG_FILE_WITH_INIT
 #include <tctdb.h>
 #include <string>
-#include <map>
-#include <iostream>
 
 using namespace std;
-typedef std::map<std::string, std::string> StringMap;
-typedef std::pair<std::string, std::string> StringPair;
 
 class TDB {
     public:
@@ -457,9 +453,10 @@ The return value is the new unique ID number or -1 on failure.
 
 class TDBQuery { 
     public:
+    /* Hold onto the db reference, otherwise we'll segfault if the db goes away before we do. */
+    %pythonappend TDBQuery(TDB *db) "self.__db = args[0]"
     TDBQuery(TDB *tdb) ;
     ~TDBQuery(); 
-
 };
 
 
@@ -569,6 +566,8 @@ The return value is the hint string.
     static const long MSISECT = 1;
     static const long MSDIFF = 2;
 
+
+
 };
 
 %pythoncode %{ 
@@ -648,3 +647,5 @@ del values
 
 
 %}
+
+

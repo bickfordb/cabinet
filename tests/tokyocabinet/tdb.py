@@ -24,9 +24,9 @@ class TDBTest(unittest.TestCase):
         assert_eq(self.db.get('y'), {'name': 'Brandon', 'gender': 'm'})
 
     def test_putcat(self):
-        self.db.put('y', {'name': 'Brandon', 'gender': 'm'})
-        self.db.putcat('y', {'name': 'Brandon 2'})
-        assert_eq(self.db.get('y'), {'name': 'Brandon 2', 'gender': 'm'})
+        assert self.db.put('y', {'gender': 'm'})
+        assert self.db.putcat('y', {'name': 'Brandon'})
+        assert_eq(self.db.get('y'), {'name': 'Brandon', 'gender': 'm'})
 
     def test_putkeep(self):
         self.db.putkeep('y', {'name': 'Brandon', 'gender': 'm'})
@@ -71,6 +71,17 @@ class TDBTest(unittest.TestCase):
                 set(['b']))
 
         assert_eq(q1.metasearch([], q1.MSISECT), set())
+
+    def test_dbref(self): 
+        db = tdb.TDB() 
+        db.open(self.dir + '/tdb-ex.db', tdb.TDB.OCREAT | tdb.TDB.OREADER | tdb.TDB.OWRITER)
+        db.putcat('b', {'name': 'Brandon', 'car': 'fast'})
+        query = tdb.TDBQuery(db)
+        del db
+        result = query.search()
+        assert_eq(result, ['b'])
+        del query
+
 
     def tearDown(self):
         shutil.rmtree(self.dir, ignore_errors=True)

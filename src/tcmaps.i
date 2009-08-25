@@ -84,7 +84,51 @@
     }
 }
 
+%typemap(in) TCLIST * { 
+    $1 = tclistnew();
+    Py_ssize_t num = PyList_Size($input);
+    for (Py_ssize_t i = 0; i < num; i++) {
+        PyObject *obj = PyList_GetItem($input, i);
+        void *buf = NULL;
+        Py_ssize_t sz = 0;
+        PyString_AsStringAndSize(obj, (char **)&buf, &sz);
+        tclistpush($1, buf, (int)sz);
+    }
+}
+
+%typemap(typecheck) TCLIST * {
+    $1 = 1;
+    if (!PyList_Check($input)) {
+        $1 = 0;
+    }
+    if ($1) {
+        Py_ssize_t num = PyList_Size($input);
+        for (Py_ssize_t i = 0; i < num; i++) {
+            if (!PyString_Check(PyList_GetItem($input, i)) {
+                $1 = 0;
+                break;
+            }
+        }
+    }
+}
+
 %typemap(newfree) TCLIST * {
     if ($1 != NULL) 
         tclistdel($1);
 }
+
+%typemap(newfree) std::string * { 
+    if ($1 != NULL) {
+        delete $1;
+    }
+}
+
+%typemap(out) std::string * { 
+    if ($1 == NULL) { 
+        $result = Py_None;
+    } else { 
+        $result = PyString_FromStringAndSize($1->c_str(), $1->length());
+    }
+}
+
+

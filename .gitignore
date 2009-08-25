@@ -1,8 +1,14 @@
 build
 dist
+src/adb.cc
 src/bdb.cc
+src/fdb.cc
+src/hdb.cc
 src/tdb.cc
+src/tokyocabinet/adb.py
 src/tokyocabinet/bdb.py
+src/tokyocabinet/fdb.py
+src/tokyocabinet/hdb.py
 src/tokyocabinet/tdb.py
 tests/lib
 *.swp
