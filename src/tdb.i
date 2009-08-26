@@ -165,7 +165,6 @@ None is returned if no record corresponds.
     TCMAP *get(const std::string & key) {
         return tctdbget(self->_db, key.c_str(), key.length());
     }
-
     %feature("docstring", "Get the file path of a table database object.
 
 Returns
@@ -291,6 +290,7 @@ Returns
 The return value is a list object of the corresponding keys.  This function does never fail
 and return an empty list even if no key corresponds.
 ") fwmkeys;
+    %newobject fwmkeys;
     TCLIST *fwmkeys(const std::string & pk, int max=-1) {
         return tctdbfwmkeys(self->_db, pk.c_str(), pk.length(), max);
     }
@@ -610,15 +610,16 @@ def items(self):
         key = self.iternext()
         if key is None:
             break
-        else:
-            yield (key, self.get(key))
+        print "key", repr(key)
+        yield (key, self.get(key))
 
 TDB.items = items
 
 del items
 
+
 def __setitem__(self, key, val): 
-    self.set(key, val)
+    self.put(key, val)
 
 TDB.__setitem__ = __setitem__
 
@@ -627,7 +628,7 @@ del __setitem__
 def __getitem__(self, key):
     val = self.get(key)
     if val is None:
-        raise KeyEror(key)
+        raise KeyError(key)
     return val
 
 TDB.__getitem__ = __getitem__
@@ -643,6 +644,7 @@ def keys(self):
             break
         yield key
 
+TDB.__iter__ = keys
 TDB.keys = keys
 del keys
 
@@ -654,6 +656,7 @@ def values(self):
 TDB.values = values
 del values
 
+TDB.query = lambda self: TDBQuery(self)
 
 %}
 

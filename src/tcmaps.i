@@ -53,19 +53,20 @@
 %typemap(out) TCMAP * { 
     if ($1 == NULL) { 
         $result = Py_None;
-    }
-    tcmapiterinit($1);
-    $result = PyDict_New();
-    {
-        while (1) {
-            int ksz = 0, vsz = 0;
-            const void *kbuf = tcmapiternext($1, &ksz);
-            if (kbuf == NULL) 
-                break;
-            const void *vbuf = tcmapget($1, kbuf, ksz, &vsz);
-            PyObject *key = PyString_FromStringAndSize((const char*)kbuf, ksz);
-            PyObject *val = PyString_FromStringAndSize((const char*)vbuf, vsz);
-            PyDict_SetItem($result, key, val);
+    } else {
+        tcmapiterinit($1);
+        $result = PyDict_New();
+        {
+            while (1) {
+                int ksz = 0, vsz = 0;
+                const void *kbuf = tcmapiternext($1, &ksz);
+                if (kbuf == NULL) 
+                    break;
+                const void *vbuf = tcmapget($1, kbuf, ksz, &vsz);
+                PyObject *key = PyString_FromStringAndSize((const char*)kbuf, ksz);
+                PyObject *val = PyString_FromStringAndSize((const char*)vbuf, vsz);
+                PyDict_SetItem($result, key, val);
+            }
         }
     }
 }

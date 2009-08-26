@@ -82,8 +82,8 @@ class TDBTest(unittest.TestCase):
         assert_eq(result, ['b'])
         del query
 
-
     def tearDown(self):
+        self.db.close()
         shutil.rmtree(self.dir, ignore_errors=True)
 
 if __name__ == '__main__':
