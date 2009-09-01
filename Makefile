@@ -1,5 +1,5 @@
 
-all: 
+all: src/bdb.cc src/tdb.cc src/hdb.cc src/adb.cc src/fdb.cc
 
 src/bdb.cc: src/bdb.i src/tcmaps.i src/ecode.i
 	swig -c++ -I/opt/local/include -modern -python -o src/bdb.cc -outdir src/cabinet src/bdb.i 
