@@ -1,4 +1,4 @@
-%module(docstring="The table database API of Tokyo Cabinet", module="tokyocabinet") tdb
+%module(docstring="The table database API of Tokyo Cabinet", module="cabinet") tdb
 %include "std_string.i"
 %include "tcmaps.i"
 %include "typemaps.i"

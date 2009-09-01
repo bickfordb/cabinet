@@ -1,4 +1,4 @@
-%module(docstring="The fixed length database API of Tokyo Cabinet", module="tokyocabinet") fdb
+%module(docstring="The fixed length database API of Tokyo Cabinet", module="cabinet") fdb
 %include "typemaps.i"
 %include "std_string.i"
 %include "tcmaps.i"

@@ -1,4 +1,4 @@
-%module(docstring="The hash database API of Tokyo Cabinet", module="tokyocabinet") hdb
+%module(docstring="The hash database API of Tokyo Cabinet", module="cabinet") hdb
 %include "typemaps.i"
 %include "std_string.i"
 %include "tcmaps.i"

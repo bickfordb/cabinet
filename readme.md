@@ -3,7 +3,7 @@
 # Example
 
 -- example.py 
-    from tokyocabinet import tdb
+    from cabinet import tdb
 
     users = tdb.TDB()
     # Create a lexical btree index on gender:

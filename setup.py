@@ -1,24 +1,24 @@
 from distutils.core import setup, Extension
 
-setup(name='tokyocabinet',
-       version='0.1',
+setup(name='cabinet',
+       version='1.0',
        description='Tokyo Cabinet bindings',
-       packages=['tokyocabinet'],
+       packages=['cabinet'],
        package_dir={'': 'src'},
        ext_modules=[
-           Extension('tokyocabinet._bdb',
+           Extension('cabinet._bdb',
                sources=['src/bdb.cc'],
                libraries=['tokyocabinet']),
-           Extension('tokyocabinet._adb',
+           Extension('cabinet._adb',
                sources=['src/adb.cc'],
                libraries=['tokyocabinet']),
-           Extension('tokyocabinet._fdb',
+           Extension('cabinet._fdb',
                sources=['src/fdb.cc'],
                libraries=['tokyocabinet']),
-           Extension('tokyocabinet._hdb',
+           Extension('cabinet._hdb',
                sources=['src/hdb.cc'],
                libraries=['tokyocabinet']),
-            Extension('tokyocabinet._tdb',
+            Extension('cabinet._tdb',
                sources=['src/tdb.cc'],
                libraries=['tokyocabinet'])])
 

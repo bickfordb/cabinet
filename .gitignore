@@ -5,11 +5,10 @@ src/bdb.cc
 src/fdb.cc
 src/hdb.cc
 src/tdb.cc
-src/tokyocabinet/adb.py
-src/tokyocabinet/bdb.py
-src/tokyocabinet/fdb.py
-src/tokyocabinet/hdb.py
-src/tokyocabinet/tdb.py
-tests/lib
+src/cabinet/adb.py
+src/cabinet/bdb.py
+src/cabinet/fdb.py
+src/cabinet/hdb.py
+src/cabinet/tdb.py
 *.swp
 *.pyc

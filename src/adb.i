@@ -1,4 +1,4 @@
-%module(docstring="The abstract database API of Tokyo Cabinet", module="tokyocabinet") adb
+%module(docstring="The abstract database API of Tokyo Cabinet", module="cabinet") adb
 %include "typemaps.i"
 %include "std_string.i"
 %include "tcmaps.i"

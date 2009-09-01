@@ -1,4 +1,4 @@
-%module(docstring="The B+ tree database API of Tokyo Cabinet", module="tokyocabinet") bdb
+%module(docstring="The B+ tree database API of Tokyo Cabinet", module="cabinet") bdb
 %include "std_string.i"
 %include "typemaps.i"
 %include "tcmaps.i"
