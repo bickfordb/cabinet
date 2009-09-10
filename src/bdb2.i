@@ -75,9 +75,6 @@ typedef struct TCBDB {
         void get(const void *kbuf, int ksiz, void **vbuf_out, int *vsiz_out) {
             *vbuf_out = tcbdbget(self, kbuf, ksiz, vsiz_out);
         }
-        void __getitem__(const void *kbuf, int ksiz, void **vbuf_out, int *vsiz_out) {
-            *vbuf_out = tcbdbget(self, kbuf, ksiz, vsiz_out);
-        }
 
         long vsiz(const void *kbuf, int ksiz) { 
             return tcbdbvsiz(self, kbuf, ksiz);
@@ -160,8 +157,112 @@ typedef struct TCBDB {
         static const long OLCKNB = 1 << 5;
         static const long OTSYNC = 1 << 6;
 
+        static const long ESUCCESS = 0;
+        static const long ETHREAD = 1;
+        static const long EINVALID = 2;
+        static const long ENOFILE = 3;
+        static const long ENOPERM = 4;
+        static const long EMETA = 5;
+        static const long ERHEAD = 6;
+        static const long EOPEN = 7;
+        static const long ECLOSE = 8;
+        static const long ETRUNC = 9;
+        static const long ESYNC = 10;
+        static const long ESTAT = 11;
+        static const long ESEEK = 12;
+        static const long EREAD = 13;
+        static const long EWRITE = 14;
+        static const long EMMAP = 15;
+        static const long ELOCK = 16;
+        static const long EUNLINK = 17;
+        static const long ERENAME = 18;
+        static const long EMKDIR = 19;
+        static const long ERMDIR = 20;
+        static const long EKEEP = 21;
+        static const long ENOREC = 22;
+        static const long EMISC = 9999;
+
+
     }
-     
+
+    %pythoncode {
+    
+    def cursor(self):
+        """Get a BDBCursor"""
+        return BDBCursor(self)
+
+    def __iter__(self):
+        """Iterate over all the records in the database."""
+        cursor = self.cursor()
+        cursor.first()
+        yield cursor.key(), cursor.val()
+        while cursor.next():
+            yield cursor.key(), cursor.val()
+
+    def keys(self):
+        """Iterate over all the keys in the database"""
+        for k, v in self:
+            yield k
+
+    iterkeys = keys
+
+    def values(self): 
+        """Iterate over all the values in the database"""
+        for k, v in self:
+            yield v
+
+    itervalues = values
+
+    def __getitem__(self, key):
+        val = self.get(key)
+        if val is None:
+            raise KeyError(key)
+        return val
+    }
+
 
 } TCBDB;
+
+
+%rename(BDBCursor) BDBCUR;
+typedef struct BDBCUR {
+    %pythonappend BDBCUR(TCBDB *db) "self.__db = args[0]"
+    %extend {
+        BDBCUR(TCBDB *db) {
+            return tcbdbcurnew(db); 
+        };
+        ~BDBCUR() { tcbdbcurdel(self); }
+
+        bool first() { 
+            return tcbdbcurfirst(self); 
+        }
+        bool last() {
+            return tcbdbcurlast(self);
+        }
+        bool jump(const void **kbuf, int ksiz) {
+            return tcbdbcurjump(self, kbuf, ksiz);
+        }
+        bool prev() { return tcbdbcurprev(self); }
+
+        bool put(const void *vbuf, int vsiz, int cpmode) {
+            return tcbdbcurput(self, vbuf, vsiz, cpmode);
+        }
+
+        void key(void **vbuf_out, int *vsiz_out) {
+            *vbuf_out = tcbdbcurkey(self, vsiz_out);
+        }
+        void val(void **vbuf_out, int *vsiz_out) {
+            *vbuf_out = tcbdbcurval(self, vsiz_out);
+        }
+        
+        bool next() { 
+            return tcbdbcurnext(self);
+        }
+        
+        bool out() { 
+            return tcbdbcurout(self);
+        }
+
+    }
+} BDBCUR;
 

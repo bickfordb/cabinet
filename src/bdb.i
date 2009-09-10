@@ -199,7 +199,7 @@ class BDBCursor {
     static const long CPBEFORE;
     static const long CPAFTER;
 
-    %pythonappend BDBCursor(BDB *db) "self.__db = args[0]"
+    %pythonprepend BDBCursor(BDB *db) "self.__db = args[0]"
     BDBCursor(BDB *);
     ~BDBCursor();
     %feature("docstring", "Move a cursor object to the first record.
