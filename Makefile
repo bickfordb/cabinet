@@ -1,16 +1,16 @@
 
-c_output = src/bdb2.c
-cpp_output = src/adb.cc src/bdb.cc src/tdb.cc src/hdb.cc src/fdb.cc 
-py_output = src/cabinet/adb.py src/cabinet/bdb.py src/cabinet/bdb2.py src/cabinet/fdb.py src/cabinet/hdb.py
+c_output = src/bdb.c
+cpp_output = src/adb.cc src/tdb.cc src/hdb.cc src/fdb.cc 
+py_output = src/cabinet/adb.py src/cabinet/bdb.py src/cabinet/fdb.py src/cabinet/hdb.py
 
-deps = src/bdb2.i src/bdb.i src/tdb.i src/fdb.i src/adb.i src/fdb.i src/tcmaps.i src/ecode.i src/cabinet/__init__.py
+deps = src/bdb.i src/tdb.i src/fdb.i src/adb.i src/fdb.i src/tcmaps.i src/ecode.i src/cabinet/__init__.py
 
 all: $(c_output) $(cpp_output) src/cabinet/__init__.py src/cabinet
 
 src/cabinet/__init__.py:
 	- touch src/cabinet/__init__.py
 
-src/bdb2.c: src/bdb2.i src/tcmaps2.i src/ecode.i 
+src/bdb.c: src/bdb.i src/tcmaps2.i src/ecode.i 
 	swig -I/opt/local/include -modern -python -o $@ -outdir src/cabinet $<
 
 $(cpp_output): src/%.cc : src/%.i src/tcmaps.i src/ecode.i 
@@ -26,17 +26,11 @@ build/test: $(c_output) $(cpp_output) $(deps)
 	
 test: build/test
 	- PYTHONPATH="build/test:$(PYTHONPATH)" python -m tests.cabinet.bdb
-	- PYTHONPATH="build/test:$(PYTHONPATH)" python -m tests.cabinet.bdb2
 	- PYTHONPATH="build/test:$(PYTHONPATH)" python -m tests.cabinet.tdb
 	- PYTHONPATH="build/test:$(PYTHONPATH)" python -m tests.cabinet.hdb
 	- PYTHONPATH="build/test:$(PYTHONPATH)" python -m tests.cabinet.fdb
 	- PYTHONPATH="build/test:$(PYTHONPATH)" python -m tests.cabinet.adb
 	rm -rf build/test
-
-test-bdb2:
-	rm -rf build/test
-	$(MAKE) build/test
-	- PYTHONPATH="build/test:$(PYTHONPATH)" python -m tests.cabinet.bdb2
 
 bench: build/test
 	PYTHONPATH=build/test python -m bench
