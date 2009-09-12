@@ -1,9 +1,9 @@
 
-c_output = src/bdb.c src/tdb.c
-cpp_output = src/adb.cc src/hdb.cc src/fdb.cc 
+c_output = src/bdb.c src/tdb.c src/hdb.c
+cpp_output = src/adb.cc src/fdb.cc 
 py_output = src/cabinet/adb.py src/cabinet/bdb.py src/cabinet/fdb.py src/cabinet/hdb.py
 
-deps = src/bdb.i src/tdb.i src/fdb.i src/adb.i src/fdb.i src/tcmaps.i src/ecode.i src/cabinet/__init__.py
+deps = src/bdb.i src/tdb.i src/fdb.i src/adb.i src/hdb.i src/tcmaps.i src/ecode.i src/cabinet/__init__.py
 
 all: $(c_output) $(cpp_output) src/cabinet/__init__.py src/cabinet
 
@@ -24,7 +24,9 @@ build/test: $(c_output) $(cpp_output) $(deps)
 	- mkdir build
 	python setup.py install --install-lib=build/test
 	
-test: build/test
+test:
+	- rm -rf build/test
+	$(MAKE) build/test
 	- PYTHONPATH="build/test:$(PYTHONPATH)" python -m tests.cabinet.bdb
 	- PYTHONPATH="build/test:$(PYTHONPATH)" python -m tests.cabinet.tdb
 	- PYTHONPATH="build/test:$(PYTHONPATH)" python -m tests.cabinet.hdb

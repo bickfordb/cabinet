@@ -475,6 +475,7 @@ The return value is the new unique ID number or -1 on failure.
 
 typedef struct {
 %extend { 
+    %pythonappend TDBQRY(TCTDB *db) "self.__db = args[0]"
     TDBQRY(TCTDB *db) {
         return tctdbqrynew(db);
     }

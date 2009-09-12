@@ -1,23 +1,22 @@
 %module(docstring="The hash database API of Tokyo Cabinet", module="cabinet") hdb
 %include "typemaps.i"
-%include "std_string.i"
 %include "tcmaps.i"
-%include "ecode.i"
 
 %{
 #define SWIG_FILE_WITH_INIT
 #include <tchdb.h>
-#include <string>
+%}
 
-class HDB : ECODE {
-    public:
-    HDB() { 
-        this->_db = tchdbnew();
+%rename (HDB) TCHDB;
+typedef struct {
+    %extend { 
+
+    TCHDB() { 
+        return tchdbnew();
     }
-    ~HDB() {
-        if (this->_db) tchdbdel(_db);
+    ~TCHDB() {
+        if (self) tchdbdel(self);
     }
-    TCHDB *_db;
 
     const char * errmsg(long ecode=-1) {
         if (ecode == -1)
@@ -27,129 +26,109 @@ class HDB : ECODE {
     long ecode() { 
         return tchdbecode(_db);
     }
-};
 
-%}
-
-class HDB : ECODE {
-    public:
-    HDB();
-    ~HDB();
-};
-
-%extend HDB { 
-    bool open(const std::string & name, int mode) { 
-       return tchdbopen(self->_db, name.c_str(), mode); 
+    bool open(const char *name, int mode) { 
+       return tchdbopen(self, name, mode); 
     }
     bool close() { 
-        return tchdbclose(self->_db);
+        return tchdbclose(self);
     }
 
     bool tune(long long bnum, int8_t apow, int8_t fpow, uint8_t opts) { 
-        return tchdbtune(self->_db, bnum, apow, fpow, opts);
+        return tchdbtune(self, bnum, apow, fpow, opts);
     }
     bool setcache(long rcnum) { 
-        return tchdbsetcache(self->_db, rcnum);
+        return tchdbsetcache(self, rcnum);
     }
 
     bool setxmsiz(long long xmsiz) { 
-        return tchdbsetxmsiz(self->_db, xmsiz);
+        return tchdbsetxmsiz(self, xmsiz);
     }
 
     bool setdfunit(long dfunit) { 
-        return tchdbsetdfunit(self->_db, dfunit);
+        return tchdbsetdfunit(self, dfunit);
     }
 
-    bool putasync(const std::string & key, const std::string & val) { 
-        return tchdbputasync(self->_db, key.c_str(), key.length(), val.c_str(), val.length());
+    bool putasync(const void *kbuf, int ksiz, const void *vbuf, int vsiz) { 
+        return tchdbputasync(self, kbuf, ksiz, vbuf, vsiz);
     }
 
-    bool put(const std::string & key, const std::string & val) { 
-        return tchdbput(self->_db, key.c_str(), key.length(), val.c_str(), val.length()); 
+    bool put(const void *kbuf, int ksiz, const void *vbuf, int vsiz) { 
+        return tchdbput(self, kbuf, ksiz, vbuf, vsiz); 
     }
-    bool putkeep(const std::string & key, const std::string & val) { 
-        return tchdbputkeep(self->_db, key.c_str(), key.length(), val.c_str(), val.length()); 
+    bool putkeep(const void *kbuf, int ksiz, const void *vbuf, int vsiz) { 
+        return tchdbputkeep(self, kbuf, ksiz, vbuf, vsiz); 
     }
-    bool putcat(const std::string & key, const std::string & val) { 
-        return tchdbputcat(self->_db, key.c_str(), key.length(), val.c_str(), val.length()); 
+    bool putcat(const void *kbuf, int ksiz, const void *vbuf, int vsiz) { 
+        return tchdbputcat(self, kbuf, ksiz, vbuf, vsiz); 
     }
-    bool out(const std::string & key) { 
-        return tchdbout(self->_db, key.c_str(), key.length()); 
+    bool out(const void *kbuf, int ksiz) { 
+        return tchdbout(self, kbuf, ksiz); 
     } 
     
-    %newobject get;
-    std::string *get(const std::string & key) { 
-        int sz = 0 ;
-        void *buf = tchdbget(self->_db, key.c_str(), key.length(), &sz); 
-        return buf != NULL ? new std::string((const char*)buf, sz) : NULL;
+    void get(const void *kbuf, int ksiz, void **vbuf_out, int *vsiz_out) { 
+        *vbuf_out = tchdbget(self, kbuf, ksiz, vsiz_out); 
     } 
 
-    long vsiz(const std::string & key) {
-        return tchdbvsiz(self->_db, key.c_str(), key.length());
+    long vsiz(const void *kbuf, int ksiz) {
+        return tchdbvsiz(self, kbuf, ksiz);
     }
 
     bool iterinit() { 
-        return tchdbiterinit(self->_db);
+        return tchdbiterinit(self);
     }
 
-    %newobject iternext;
-    std::string *iternext() {
-        int sz = 0;
-        void *buf = tchdbiternext(self->_db, &sz);
-        std::string *result = NULL;
-        if (buf != NULL) {
-            result = new std::string((const char*)buf, sz);
-            free(buf);
-        }
-        return result;
+    void iternext(void **kbuf_out, int *ksiz_out) {
+        kbuf_out = tchdbiternext(self, ksiz_out);
     }
 
     %newobject fwmkeys;
-    TCLIST *fwmkeys(const std::string & prefix, int max=-1) {
-        return tchdbfwmkeys(self->_db, prefix.c_str(), prefix.length(), max);
+    TCLIST *fwmkeys(const void *kbuf, int ksiz, int max=-1) {
+        return tchdbfwmkeys(self, kbuf, ksiz, max);
     }
     
-    int addint(const std::string & key, int num) { 
-        return tchdbaddint(self->_db, key.c_str(), key.length(), num);
+    int addint(const void *kbuf, int ksiz, int num) { 
+        return tchdbaddint(self, kbuf, ksiz, num);
     }
 
-    double adddouble(const std::string & key, double num) { 
-        return tchdbadddouble(self->_db, key.c_str(), key.length(), num);
+    double adddouble(const void *kbuf, int ksiz, double num) { 
+        return tchdbadddouble(self, kbuf, ksiz, num);
     }
     bool sync() {
-        return tchdbsync(self->_db);
+        return tchdbsync(self);
     }
     
     bool vanish() {
-        return tchdbvanish(self->_db);
+        return tchdbvanish(self);
     }
-    bool copy(const std::string & path) {
-        return tchdbcopy(self->_db, path.c_str());
+    bool copy(const char *path) {
+        return tchdbcopy(self, path);
     }
 
     unsigned long long rnum() {
-        return tchdbrnum(self->_db);
+        return tchdbrnum(self);
     }
 
     bool tranbegin() { 
-        return tchdbtranbegin(self->_db);
+        return tchdbtranbegin(self);
     } 
 
     bool tranabort() {
-        return tchdbtranabort(self->_db);
+        return tchdbtranabort(self);
     }
 
     bool trancommit() { 
-        return tchdbtrancommit(self->_db);
+        return tchdbtrancommit(self);
     }
 
     bool optimize(long long bnum, int8_t apow, int8_t fpow, uint8_t opts) {
-        return tchdboptimize(self->_db, bnum, apow, fpow, opts);
+        return tchdboptimize(self, bnum, apow, fpow, opts);
     }
 
     uint64_t fsiz() { 
-        return tchdbfsiz(self->_db);
+        return tchdbfsiz(self);
     }
+
     static const long TLARGE = 1 << 0;
     static const long TDEFLATE = 1 << 1;
     static const long TBZIP = 1 << 2;
@@ -161,49 +140,38 @@ class HDB : ECODE {
     static const long ONOLCK = 1 << 4;
     static const long OLCKNB = 1 << 5;
     static const long OTSYNC = 1 << 6;
-};
+    %pythoncode %{ 
 
-%pythoncode %{ 
+    def keys(self):
+        """Iterate over all the keys in the database"""
+        for k, v in self:
+            yield k
 
-def keys(self):
-    """Iterate over all the keys in the database"""
-    for k, v in self:
-        yield k
+    def values(self): 
+        """Iterate over all the values in the database"""
+        for k, v in self:
+            yield v
 
-HDB.keys = keys
-del keys
+    def __getitem__(self, key):
+        val = self.get(key)
+        if val is None:
+            raise KeyError(key)
+        return val
 
-def values(self): 
-    """Iterate over all the values in the database"""
-    for k, v in self:
-        yield v
+    def items(self): 
+        self.iterinit()
+        while True:
+            i = self.iternext()
+            if i is None:
+                break
+            yield i, self.get(i)
 
-HDB.values = values
-del values
+    iteritems = items
 
-def __getitem__(self, key):
-    val = self.get(key)
-    if val is None:
-        raise KeyError(key)
-    return val
+    __iter__ = keys
 
-HDB.__getitem__ = __getitem__
-del __getitem__
-
-HDB.__setitem__ = HDB.put
-
-def items(self): 
-    self.iterinit()
-    while True:
-        i = self.iternext()
-        if i is None:
-            break
-        yield i, self.get(i)
-
-HDB.items = items
-HDB.__iter__ = items
-HDB.__len__ = HDB.rnum
-
-%}
-
+    __len__ = rnum
+    %}    
+}
+} TCHDB;
 
