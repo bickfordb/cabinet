@@ -15,6 +15,8 @@
 %typemap(in,numinputs=0) (void **buf_out, int *siz_out) () {
     $1 = alloca(sizeof(void *));
     $2 = alloca(sizeof(int));
+    *$1 = NULL;
+    *$2 = 0;
     $result = Py_None;
 }
 
@@ -28,7 +30,8 @@
 }
 
 %apply (void **buf_out, int *siz_out) {
-    (void **vbuf_out, int *vsiz_out)
+    (void **vbuf_out, int *vsiz_out),
+    (void **kbuf_out, int *ksiz_out)
 }
 
 
@@ -122,7 +125,8 @@
 %typemap(in) TCLIST * {
     $1 = tclistnew();
     Py_ssize_t num = PyList_Size($input);
-    for (Py_ssize_t i = 0; i < num; i++) {
+    Py_ssize_t i = 0;
+    for (i = 0; i < num; i++) {
         PyObject *obj = PyList_GetItem($input, i);
         void *buf = NULL;
         Py_ssize_t sz = 0;

@@ -1,172 +1,143 @@
 %module(docstring="The abstract database API of Tokyo Cabinet", module="cabinet") adb
 %include "typemaps.i"
-%include "std_string.i"
 %include "tcmaps.i"
 
 %{
 #define SWIG_FILE_WITH_INIT
 #include <tcadb.h>
-#include <string>
-
-class ADB {
-    public:
-    ADB() { 
-        this->_db = tcadbnew();
-    }
-    ~ADB() {
-        if (this->_db) tcadbdel(_db);
-    }
-    TCADB *_db;
-};
 
 %}
 
-class ADB {
-    public:
-    ADB();
-    ~ADB();
-};
+%rename (ADB) TCADB;
 
-%extend ADB { 
-    bool open(const std::string & name) { 
-       return tcadbopen(self->_db, name.c_str()); 
+typedef struct { 
+%extend {
+    TCADB() { 
+        return tcadbnew();
+    }
+    ~ADB() {
+        if (self) tcadbdel(self);
+    }
+    bool open(const char *name) { 
+       return tcadbopen(self, name); 
     }
     bool close() { 
-        return tcadbclose(self->_db);
+        return tcadbclose(self);
     }
-    bool put(const std::string & key, const std::string & val) { 
-        return tcadbput(self->_db, key.c_str(), key.length(), val.c_str(), val.length()); 
+    bool put(const void *kbuf, int ksiz, const void *vbuf, int vsiz) { 
+        return tcadbput(self, kbuf, ksiz, vbuf, vsiz); 
     }
-    bool putkeep(const std::string & key, const std::string & val) { 
-        return tcadbputkeep(self->_db, key.c_str(), key.length(), val.c_str(), val.length()); 
+    bool putkeep(const void *kbuf, int ksiz, const void *vbuf, int vsiz) { 
+        return tcadbputkeep(self, kbuf, ksiz, vbuf, vsiz); 
     }
-    bool putcat(const std::string & key, const std::string & val) { 
-        return tcadbputcat(self->_db, key.c_str(), key.length(), val.c_str(), val.length()); 
+    bool putcat(const void *kbuf, int ksiz, const void *vbuf, int vsiz) { 
+        return tcadbputcat(self, kbuf, ksiz, vbuf, vsiz); 
     }
-    bool out(const std::string & key) { 
-        return tcadbout(self->_db, key.c_str(), key.length()); 
+    bool out(const void *kbuf, int ksiz) { 
+        return tcadbout(self, kbuf, ksiz); 
     } 
     
-    %newobject get;
-    std::string *get(const std::string & key) { 
-        int sz = 0 ;
-        void *buf = tcadbget(self->_db, key.c_str(), key.length(), &sz); 
-        return buf != NULL ? new std::string((const char*)buf, sz) : NULL;
+    void get(const void *kbuf, int ksiz, void **vbuf_out, int *vsiz_out) { 
+        *vbuf_out = tcadbget(self, kbuf, ksiz, vsiz_out); 
     } 
 
-    long vsiz(const std::string & key) {
-        return tcadbvsiz(self->_db, key.c_str(), key.length());
+    long vsiz(const void *kbuf, int ksiz) {
+        return tcadbvsiz(self, kbuf, ksiz);
     }
 
     bool iterinit() { 
-        return tcadbiterinit(self->_db);
+        return tcadbiterinit(self);
     }
 
-    %newobject iternext;
-    std::string *iternext() {
-        int sz = 0;
-        void *buf = tcadbiternext(self->_db, &sz);
-        std::string *result = NULL;
-        if (buf != NULL) {
-            result = new std::string((const char*)buf, sz);
-            free(buf);
-        }
-        return result;
+    void iternext(void **kbuf_out, int *ksiz_out) {
+        *kbuf_out = tcadbiternext(self, ksiz_out);
     }
 
     %newobject fwmkeys;
-    TCLIST *fwmkeys(const std::string & prefix, int max=-1) {
-        return tcadbfwmkeys(self->_db, prefix.c_str(), prefix.length(), max);
+    TCLIST *fwmkeys(const void *kbuf, int ksiz, int max=-1) {
+        return tcadbfwmkeys(self, kbuf, ksiz, max);
     }
     
-    int addint(const std::string & key, int num) { 
-        return tcadbaddint(self->_db, key.c_str(), key.length(), num);
+    int addint(const void *kbuf, int ksiz, int num) { 
+        return tcadbaddint(self, kbuf, ksiz, num);
     }
 
-    double adddouble(const std::string & key, double num) { 
-        return tcadbadddouble(self->_db, key.c_str(), key.length(), num);
+    double adddouble(const void *kbuf, int ksiz, double num) { 
+        return tcadbadddouble(self, kbuf, ksiz, num);
     }
     bool sync() {
-        return tcadbsync(self->_db);
+        return tcadbsync(self);
     }
     
     bool vanish() {
-        return tcadbvanish(self->_db);
+        return tcadbvanish(self);
     }
-    bool copy(const std::string & path) {
-        return tcadbcopy(self->_db, path.c_str());
+    bool copy(const char *path) {
+        return tcadbcopy(self, path);
     }
 
     unsigned long long rnum() {
-        return tcadbrnum(self->_db);
+        return tcadbrnum(self);
     }
 
     bool tranbegin() { 
-        return tcadbtranbegin(self->_db);
+        return tcadbtranbegin(self);
     } 
 
     bool tranabort() {
-        return tcadbtranabort(self->_db);
+        return tcadbtranabort(self);
     }
 
     bool trancommit() { 
-        return tcadbtrancommit(self->_db);
+        return tcadbtrancommit(self);
     }
 
-    bool optimize(const std::string & params) { 
-        return tcadboptimize(self->_db, params.c_str());
+    bool optimize(const char * params) { 
+        return tcadboptimize(self, params);
     }
 
     uint64_t size() { 
-        return tcadbsize(self->_db);
+        return tcadbsize(self);
     }
 
     %newobject misc;
     TCLIST *misc(const char *name, const TCLIST *args) {
-        return tcadbmisc(self->_db, name, args);
+        return tcadbmisc(self, name, args);
     }
-};
+    %pythoncode %{ 
 
-%pythoncode %{ 
+    def keys(self):
+        """Iterate over all the keys in the database"""
+        for k, v in self:
+            yield k
 
-def keys(self):
-    """Iterate over all the keys in the database"""
-    for k, v in self:
-        yield k
+    def values(self): 
+        """Iterate over all the values in the database"""
+        for k, v in self:
+            yield v
 
-ADB.keys = keys
-del keys
+    def __getitem__(self, key):
+        val = self.get(key)
+        if val is None:
+            raise KeyError(key)
+        return val
 
-def values(self): 
-    """Iterate over all the values in the database"""
-    for k, v in self:
-        yield v
+    __setitem__ = put
 
-ADB.values = values
-del values
+    def items(self): 
+        self.iterinit()
+        while True:
+            i = self.iternext()
+            if i is None:
+                break
+            yield i, self.get(i)
 
-def __getitem__(self, key):
-    val = self.get(key)
-    if val is None:
-        raise KeyError(key)
-    return val
+    items = items
+    __iter__ = keys
+    __len__ = rnum
+    %}
+}
+} TCADB;
 
-ADB.__getitem__ = __getitem__
-del __getitem__
 
-ADB.__setitem__ = ADB.put
-
-def items(self): 
-    self.iterinit()
-    while True:
-        i = self.iternext()
-        if i is None:
-            break
-        yield i, self.get(i)
-
-ADB.items = items
-ADB.__iter__ = items
-ADB.__len__ = ADB.rnum
-
-%}
 

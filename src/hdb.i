@@ -20,11 +20,11 @@ typedef struct {
 
     const char * errmsg(long ecode=-1) {
         if (ecode == -1)
-            ecode = tchdbecode(_db);
+            ecode = tchdbecode(self);
         return tchdberrmsg(ecode);
     }
     long ecode() { 
-        return tchdbecode(_db);
+        return tchdbecode(self);
     }
 
     bool open(const char *name, int mode) { 
@@ -79,7 +79,7 @@ typedef struct {
     }
 
     void iternext(void **kbuf_out, int *ksiz_out) {
-        kbuf_out = tchdbiternext(self, ksiz_out);
+        *kbuf_out = tchdbiternext(self, ksiz_out);
     }
 
     %newobject fwmkeys;
@@ -161,10 +161,10 @@ typedef struct {
     def items(self): 
         self.iterinit()
         while True:
-            i = self.iternext()
-            if i is None:
+            key = self.iternext()
+            if key is None:
                 break
-            yield i, self.get(i)
+            yield key, self.get(key)
 
     iteritems = items
 

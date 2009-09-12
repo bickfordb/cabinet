@@ -1,131 +1,113 @@
 %module(docstring="The fixed length database API of Tokyo Cabinet", module="cabinet") fdb
 %include "typemaps.i"
-%include "std_string.i"
 %include "tcmaps.i"
-%include "ecode.i"
 %{
 #define SWIG_FILE_WITH_INIT
 #include <tcfdb.h>
-#include <string>
+%}
 
-class FDB : ECODE {
-    public:
-    FDB() { 
-        this->_db = tcfdbnew();
+%rename (FDB) TCFDB;
+typedef struct { 
+%extend { 
+    
+    TCFDB() { 
+        return tcfdbnew();
     }
-    ~FDB() {
-        if (this->_db) tcfdbdel(_db);
+    ~TCFDB() {
+        if (self) tcfdbdel(self);
     }
 
     const char * errmsg(long ecode=-1) {
         if (ecode == -1) 
-            ecode = tcfdbecode(_db);
+            ecode = tcfdbecode(self);
         return tcfdberrmsg(ecode);
     }
 
     long ecode() {
-        return tcfdbecode(_db);
+        return tcfdbecode(self);
     }
 
-    TCFDB *_db;
-};
-
-%}
-
-class FDB : ECODE {
-    public:
-    FDB();
-    ~FDB();
-};
-
-%extend FDB { 
-    bool open(const std::string & name, int mode) { 
-       return tcfdbopen(self->_db, name.c_str(), mode); 
+    bool open(const char *name, int mode) { 
+       return tcfdbopen(self, name, mode); 
     }
     bool close() { 
-        return tcfdbclose(self->_db);
+        return tcfdbclose(self);
     }
 
 
     bool tune(int width, long long limsiz) { 
-        return tcfdbtune(self->_db, width, limsiz);
+        return tcfdbtune(self, width, limsiz);
     }
     bool optimize(int width, long long limsiz) { 
-        return tcfdboptimize(self->_db, width, limsiz);
+        return tcfdboptimize(self, width, limsiz);
     }
 
-    bool put(long long key, const std::string & val) { 
-        return tcfdbput(self->_db, key, val.c_str(), val.length()); 
+    bool put(long long key, const void *vbuf, int vsiz) { 
+        return tcfdbput(self, key, vbuf, vsiz); 
     }
 
-    bool putkeep(long long key, const std::string & val) { 
-        return tcfdbputkeep(self->_db, key, val.c_str(), val.length()); 
+    bool putkeep(long long key, const void *vbuf, int vsiz) { 
+        return tcfdbputkeep(self, key, vbuf, vsiz); 
     }
-    bool putcat(long long key, const std::string & val) { 
-        return tcfdbputcat(self->_db, key, val.c_str(), val.length()); 
+    bool putcat(long long key, const void *vbuf, int vsiz) { 
+        return tcfdbputcat(self, key, vbuf, vsiz); 
     }
     bool out(long long key) { 
-        return tcfdbout(self->_db, key); 
+        return tcfdbout(self, key); 
     } 
     
-
-    %newobject get;
-    std::string *get(long long key) { 
-        int sz = 0 ;
-        void *buf = tcfdbget(self->_db, key, &sz); 
-        std::string *result = buf != NULL ? new std::string((const char*)buf, sz) : NULL;
-        free(buf);
-        return result;
+    void get(long long key, void **vbuf_out, int *vsiz_out) { 
+        *vbuf_out = tcfdbget(self, key, vsiz_out);
     } 
 
     int vsiz(long long key) {
-        return tcfdbvsiz(self->_db, key);
+        return tcfdbvsiz(self, key);
     }
 
     bool iterinit() { 
-        return tcfdbiterinit(self->_db);
+        return tcfdbiterinit(self);
     }
 
     long long iternext() {
-        return tcfdbiternext(self->_db);
+        return tcfdbiternext(self);
     }
 
     int addint(long long id, int num) { 
-        return tcfdbaddint(self->_db, id, num);
+        return tcfdbaddint(self, id, num);
     }
 
     double adddouble(long long id, double num) { 
-        return tcfdbadddouble(self->_db, id, num);
+        return tcfdbadddouble(self, id, num);
     }
     bool sync() {
-        return tcfdbsync(self->_db);
+        return tcfdbsync(self);
     }
     
     bool vanish() {
-        return tcfdbvanish(self->_db);
+        return tcfdbvanish(self);
     }
-    bool copy(const std::string & path) {
-        return tcfdbcopy(self->_db, path.c_str());
+    bool copy(const char *path) {
+        return tcfdbcopy(self, path);
     }
 
     unsigned long long rnum() {
-        return tcfdbrnum(self->_db);
+        return tcfdbrnum(self);
     }
 
     bool tranbegin() { 
-        return tcfdbtranbegin(self->_db);
+        return tcfdbtranbegin(self);
     } 
 
     bool tranabort() {
-        return tcfdbtranabort(self->_db);
+        return tcfdbtranabort(self);
     }
 
     bool trancommit() { 
-        return tcfdbtrancommit(self->_db);
+        return tcfdbtrancommit(self);
     }
 
     uint64_t fsiz() { 
-        return tcfdbfsiz(self->_db);
+        return tcfdbfsiz(self);
     }
     static const long OREADER = 1 << 0;
     static const long OWRITER = 1 << 1;
@@ -134,49 +116,41 @@ class FDB : ECODE {
     static const long ONOLCK = 1 << 4;
     static const long OLCKNB = 1 << 5;
     static const long OTSYNC = 1 << 6;
-};
 
-%pythoncode %{ 
+    %pythoncode %{ 
 
-def keys(self):
-    """Iterate over all the keys in the database"""
-    for k, v in self:
-        yield k
+    def keys(self):
+        """Iterate over all the keys in the database"""
+        for k, v in self:
+            yield k
 
-FDB.keys = keys
-del keys
+    def values(self): 
+        """Iterate over all the values in the database"""
+        for k, v in self:
+            yield v
 
-def values(self): 
-    """Iterate over all the values in the database"""
-    for k, v in self:
-        yield v
+    def __getitem__(self, key):
+        val = self.get(key)
+        if val is None:
+            raise KeyError(key)
+        return val
 
-FDB.values = values
-del values
+    __setitem__ = put
 
-def __getitem__(self, key):
-    val = self.get(key)
-    if val is None:
-        raise KeyError(key)
-    return val
+    def items(self): 
+        self.iterinit()
+        while True:
+            i = self.iternext()
+            if i == 0:
+                break
+            yield i, self.get(i)
 
-FDB.__getitem__ = __getitem__
-del __getitem__
-
-FDB.__setitem__ = FDB.put
-
-def items(self): 
-    self.iterinit()
-    while True:
-        i = self.iternext()
-        if i == 0:
-            break
-        yield i, self.get(i)
-
-FDB.items = items
-FDB.__iter__ = items
-FDB.__len__ = FDB.rnum
+    items = items
+    __iter__ = keys
+    __len__ = rnum
 
 %}
+}
+} TCFDB;
 
 
