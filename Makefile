@@ -1,6 +1,6 @@
 
-c_output = src/bdb.c
-cpp_output = src/adb.cc src/tdb.cc src/hdb.cc src/fdb.cc 
+c_output = src/bdb.c src/tdb.c
+cpp_output = src/adb.cc src/hdb.cc src/fdb.cc 
 py_output = src/cabinet/adb.py src/cabinet/bdb.py src/cabinet/fdb.py src/cabinet/hdb.py
 
 deps = src/bdb.i src/tdb.i src/fdb.i src/adb.i src/fdb.i src/tcmaps.i src/ecode.i src/cabinet/__init__.py
@@ -10,7 +10,7 @@ all: $(c_output) $(cpp_output) src/cabinet/__init__.py src/cabinet
 src/cabinet/__init__.py:
 	- touch src/cabinet/__init__.py
 
-src/bdb.c: src/bdb.i src/tcmaps2.i src/ecode.i 
+$(c_output): src/%.c : src/%.i src/tcmaps.i src/ecode.i 
 	swig -I/opt/local/include -modern -python -o $@ -outdir src/cabinet $<
 
 $(cpp_output): src/%.cc : src/%.i src/tcmaps.i src/ecode.i 

@@ -1,6 +1,7 @@
 build
 dist
 src/adb.cc
+src/bdb.c
 src/bdb.cc
 src/fdb.cc
 src/hdb.cc

@@ -1,6 +1,39 @@
 
+%typemap(in) (const void *buf, int bsiz) {
+    if (!PyString_Check($input)) {
+        PyErr_SetString(PyExc_ValueError, "Expecting a string");
+        return NULL;
+    }
+    PyString_AsStringAndSize($input, (char **)&$1, (Py_ssize_t *)&$2);
+}
+
+%apply (const void *buf, int bsiz) {
+    (const void *kbuf, int ksiz),
+    (const void *vbuf, int vsiz)
+}
+
+%typemap(in,numinputs=0) (void **buf_out, int *siz_out) () {
+    $1 = alloca(sizeof(void *));
+    $2 = alloca(sizeof(int));
+    $result = Py_None;
+}
+
+%typemap(argout) (void **buf_out, int *siz_out) () {
+    if (*$1 == NULL) {
+        $result = Py_None;
+    } else {
+        $result = PyString_FromStringAndSize((const char*)*$1, (Py_ssize_t)*$2);
+        free(*$1);
+    }
+}
+
+%apply (void **buf_out, int *siz_out) {
+    (void **vbuf_out, int *vsiz_out)
+}
+
+
 %typemap(check) TCMAP * {
-    if ($1 == NULL) { 
+    if ($1 == NULL) {
         PyErr_SetString(PyExc_TypeError, "Expecting a dictionary of bytestring to bytestring");
         return NULL;
     }
@@ -18,16 +51,16 @@
                 valid = false;
                 break;
             }
-            if (!PyString_Check(value)) { 
+            if (!PyString_Check(value)) {
                 valid = false;
                 break;
-            } 
+            }
         }
-    } else { 
-        valid = false; 
+    } else {
+        valid = false;
     }
-    if (valid) { 
-        $1 = tcmapnew(); 
+    if (valid) {
+        $1 = tcmapnew();
         PyObject *key, *value;
         Py_ssize_t pos = 0;
         while (PyDict_Next($input, &pos, &key, &value)) {
@@ -45,13 +78,13 @@
         tcmapdel($1);
 %}
 
-%typemap(newfree) TCMAP * { 
+%typemap(newfree) TCMAP * {
     if ($1 != NULL)
         tcmapdel($1);
 }
 
-%typemap(out) TCMAP * { 
-    if ($1 == NULL) { 
+%typemap(out) TCMAP * {
+    if ($1 == NULL) {
         $result = Py_None;
     } else {
         tcmapiterinit($1);
@@ -60,7 +93,7 @@
             while (1) {
                 int ksz = 0, vsz = 0;
                 const void *kbuf = tcmapiternext($1, &ksz);
-                if (kbuf == NULL) 
+                if (kbuf == NULL)
                     break;
                 const void *vbuf = tcmapget($1, kbuf, ksz, &vsz);
                 PyObject *key = PyString_FromStringAndSize((const char*)kbuf, ksz);
@@ -71,12 +104,13 @@
     }
 }
 
-%typemap(out) TCLIST * { 
-    if ($1 == NULL) { 
+%typemap(out) TCLIST * {
+    if ($1 == NULL) {
         $result = Py_None;
-    } else { 
+    } else {
         $result = PyList_New(0);
-        for (int i = 0; i < tclistnum($1); i++) {
+        int i = 0;
+        for (i = 0; i < tclistnum($1); i++) {
             int sz = 0;
             const void *buf = tclistval($1, i, &sz);
             PyObject *val = PyString_FromStringAndSize((const char *)buf, sz);
@@ -85,7 +119,7 @@
     }
 }
 
-%typemap(in) TCLIST * { 
+%typemap(in) TCLIST * {
     $1 = tclistnew();
     Py_ssize_t num = PyList_Size($input);
     for (Py_ssize_t i = 0; i < num; i++) {
@@ -114,20 +148,20 @@
 }
 
 %typemap(newfree) TCLIST * {
-    if ($1 != NULL) 
+    if ($1 != NULL)
         tclistdel($1);
 }
 
-%typemap(newfree) std::string * { 
+%typemap(newfree) std::string * {
     if ($1 != NULL) {
         delete $1;
     }
 }
 
-%typemap(out) std::string * { 
-    if ($1 == NULL) { 
+%typemap(out) std::string * {
+    if ($1 == NULL) {
         $result = Py_None;
-    } else { 
+    } else {
         $result = PyString_FromStringAndSize($1->c_str(), $1->length());
     }
 }

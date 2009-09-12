@@ -1,56 +1,36 @@
 %module(docstring="The table database API of Tokyo Cabinet", module="cabinet") tdb
-%include "std_string.i"
 %include "tcmaps.i"
 %include "typemaps.i"
-%include "ecode.i"
 
 %{
 #define SWIG_FILE_WITH_INIT
 #include <tctdb.h>
-#include <string>
 
-using namespace std;
+%}
 
-class TDB : ECODE {
-    public:
-    TDB() { 
-        _db = tctdbnew();
+%rename(TDB) TCTDB;
+%rename(TDBQuery) TDBQRY;
+
+typedef struct {
+%extend {
+    TCTDB() { 
+        return tctdbnew();
     }
-    ~TDB() {
-        if (_db != NULL) tctdbdel(_db);
+    ~TCTDB() {
+        if (self != NULL) tctdbdel(self);
     }
 
-    long ecode() { return tctdbecode(_db); }
+    long ecode() { return tctdbecode(self); }
 
     const char * errmsg(long ecode=-1) { 
         if (ecode == -1) 
-            ecode = tctdbecode(_db);
+            ecode = tctdbecode(self);
         return tctdberrmsg(ecode);
     }
 
-    TCTDB *_db; 
-};
-
-class TDBQuery {
-    public:
-    TDBQuery(TDB *db) {
-        _q = tctdbqrynew(db->_db);
-    }
-    ~TDBQuery() {
-        if (_q != NULL) 
-            tctdbqrydel(_q);
-    }
-    TDBQRY *_q;
-};
-%}
-
-class TDB : ECODE {
-};
-
-%extend TDB { 
     %feature("docstring", "Get the number of rows in the database") __len__;
     int __len__() { 
-        return tctdbrnum(self->_db);
+        return tctdbrnum(self);
     }
 
     %feature("docstring", "Set the tuning parameters of a table database object.
@@ -75,7 +55,7 @@ Returns
 If successful, the return value is true, else, it is false.
 ") tune;
     bool tune(int64_t bnum, int8_t apow, int8_t fpow, uint8_t opts) {
-        return tctdbtune(self->_db, bnum, apow, fpow, opts); 
+        return tctdbtune(self, bnum, apow, fpow, opts); 
     }
     
     %feature ("docstring", "Set the caching parameters of a table database object.
@@ -95,7 +75,7 @@ Returns
 If successful, the return value is true, else, it is false.
 ") setcache;
     bool setcache(int32_t rcnum, int32_t lcnum, int32_t ncnum) {
-        return tctdbsetcache(self->_db, rcnum, lcnum, ncnum);
+        return tctdbsetcache(self, rcnum, lcnum, ncnum);
     }
 
     %feature("docstring", "Set the size of the extra mapped memory of a table database object.
@@ -110,7 +90,7 @@ Returns
 If successful, the return value is true, else, it is false.
    ") setxmsiz;
     bool setxmsiz(long long xmsiz) {
-        return tctdbsetxmsiz(self->_db, xmsiz);
+        return tctdbsetxmsiz(self, xmsiz);
     }
 
     %feature("docstring", "Open a database file and connect a table database object.
@@ -128,13 +108,13 @@ bitwise-or: `TDBONOLCK', which means it opens the database file without file loc
 Returns
 If successful, the return value is true, else, it is false.
 ") open;
-    bool open(const std::string & path, long omode) {
-        return tctdbopen(self->_db, path.c_str(), omode);
+    bool open(const char *path, long omode) {
+        return tctdbopen(self, path, omode);
     }
 
     %feature("docstring", "") close;
     bool close() {
-        return tctdbclose(self->_db);
+        return tctdbclose(self);
     }
 
     %feature("docstring", "Store a record into a table database object.
@@ -148,8 +128,8 @@ cols -- dict{str:str}, a dictionary of string (column) to string (value)
 Returns
 If successful, the return value is true, else, it is false.
 ") put;
-    bool put(const std::string & key, TCMAP *columns) {
-        return tctdbput(self->_db, key.c_str(), key.length(), columns);
+    bool put(const void *kbuf, int ksiz, TCMAP *columns) {
+        return tctdbput(self, kbuf, ksiz, columns);
     }
 
     %feature("docstring", "Retrieve a record in a table database object.
@@ -162,8 +142,8 @@ If successful, the return value is a map object of the columns of the correspond
 None is returned if no record corresponds.
 ") get;
     %newobject get;
-    TCMAP *get(const std::string & key) {
-        return tctdbget(self->_db, key.c_str(), key.length());
+    TCMAP *get(const void *kbuf, int ksiz) {
+        return tctdbget(self, kbuf, ksiz);
     }
     %feature("docstring", "Get the file path of a table database object.
 
@@ -171,12 +151,12 @@ Returns
 The return value is the path of the database file or `NULL' if the object does
 not connect to any database file.") path;
     const char *path() {
-        return tctdbpath(self->_db);
+        return tctdbpath(self);
     }
 
     %feature("docstring", "Get the number of records in the database") rnum;
     long long rnum() { 
-        return tctdbrnum(self->_db); 
+        return tctdbrnum(self); 
     }
 
     
@@ -186,7 +166,7 @@ Returns
 The return value is the size of the database file or 0 if the object does not
 connect to any database file. ") fsiz;
     long long fsiz() {
-        return tctdbfsiz(self->_db);
+        return tctdbfsiz(self);
     }
 
     %feature("docstring", "Store a new record into a table database object.
@@ -200,8 +180,8 @@ cols -- dict, the columns / values
 Returns
 If successful, the return value is true, else, it is false.
 ") putkeep;
-    bool putkeep(const std::string & pk, TCMAP *cols) { 
-        return tctdbputkeep(self->_db, pk.c_str(), pk.length(), cols);
+    bool putkeep(const void *kbuf, int ksiz, TCMAP *cols) { 
+        return tctdbputkeep(self, kbuf, ksiz, cols);
     }
 
     %feature("docstring", "Concatenate columns of the existing record in a table database object.
@@ -215,8 +195,8 @@ cols -- dict, the columns / values to set
 Returns
 If successful, the return value is true, else, it is false.
 ") putcat;
-    bool putcat(const std::string & pk, TCMAP *cols) {
-        return tctdbputcat(self->_db, pk.c_str(), pk.length(), cols);
+    bool putcat(const void *kbuf, int ksiz, TCMAP *cols) {
+        return tctdbputcat(self, kbuf, ksiz, cols);
    } 
 
    %feature("docstring" , "Remove a record of a table database object.
@@ -227,8 +207,8 @@ key -- str, the primary key
 Returns
 If successful, the return value is true, else, it is false. 
 ") out;
-    bool out(const std::string & pk) { 
-        return tctdbout(self->_db, pk.c_str(), pk.length());
+    bool out(const void *kbuf, int ksiz) { 
+        return tctdbout(self, kbuf, ksiz);
     }
 
     %feature("docstring", "Get the size of the value of a record in a table database object.
@@ -239,8 +219,8 @@ pk -- str, the primary key
 Returns
 If successful, the return value is the size of the value of the corresponding
 record, else, it is -1.") vsiz;
-    int vsiz(const std::string & pk) { 
-        return tctdbvsiz(self->_db, pk.c_str(), pk.length());
+    int vsiz(const void *kbuf, int ksiz) { 
+        return tctdbvsiz(self, kbuf, ksiz);
     }
     %feature("docstring", "Initialize the iterator of a table database object.
 
@@ -251,7 +231,7 @@ record, else, it is -1.") vsiz;
    If successful, the return value is true, else, it is false.
     ") iterinit;
     bool iterinit () {
-        return tctdbiterinit(self->_db);
+        return tctdbiterinit(self);
     }
 
     %feature("docstring", "Get the next primary key of the iterator of a table database object.
@@ -265,15 +245,8 @@ storing matches the one of the traversal access.
 Returns
 The next primary key or None
 ") iternext;
-    %newobject iternext;
-    std::string *iternext() {
-        int sp;
-        void *buf = tctdbiternext(self->_db, &sp);
-        if (buf != NULL) { 
-            return new std::string((const char*)buf, sp); 
-        } else { 
-            return NULL;
-        }
+    void iternext(void **kbuf_out, int *ksiz_out) {
+        *kbuf_out = tctdbiternext(self, ksiz_out);
     }
     
     %feature("docstring", "Get forward matching primary keys in a table database object.
@@ -291,8 +264,8 @@ The return value is a list object of the corresponding keys.  This function does
 and return an empty list even if no key corresponds.
 ") fwmkeys;
     %newobject fwmkeys;
-    TCLIST *fwmkeys(const std::string & pk, int max=-1) {
-        return tctdbfwmkeys(self->_db, pk.c_str(), pk.length(), max);
+    TCLIST *fwmkeys(const void *kbuf, int ksiz, int max=-1) {
+        return tctdbfwmkeys(self, kbuf, ksiz, max);
     }
 
     %feature("docstring", "Add an integer to a column of a record in a table database object.
@@ -306,8 +279,8 @@ Arguments
 key -- str, the primary key
 num -- int, the number to add
     ") addint;
-    int addint(const std::string & key, int num) {
-        return tctdbaddint(self->_db, key.c_str(), key.length(), num);
+    int addint(const void *kbuf, int ksiz, int num) {
+        return tctdbaddint(self, kbuf, ksiz, num);
     }
     %feature("docstring", "Add a real number to a column of a record in a table database object.
 
@@ -320,15 +293,15 @@ Arguments
 key -- str, the primary key
 num -- float, the number to add
 ") adddouble;   
-    double adddouble(const std::string & key, double num) {
-        return tctdbadddouble(self->_db, key.c_str(), key.length(), num);
+    double adddouble(const void *kbuf, int ksiz, double num) {
+        return tctdbadddouble(self, kbuf, ksiz, num);
     }
         
     %feature("docstring", "Synchronize updated contents of a table database object with the file and the device.
 
 If successful, the return value is true, else, it is false.
 This function is useful when another process connects to the same database file.") sync;
-    bool sync() { return tctdbsync(self->_db); }
+    bool sync() { return tctdbsync(self); }
 
     %feature("docstring", "Optimize the file of a table database object.
 
@@ -352,13 +325,13 @@ Returns
 If successful, the return value is true, else, it is false.
 ") optimize;
     bool optimize(int64_t bnum, int8_t apow, int8_t fpow, uint8_t opts) { 
-        return tctdboptimize(self->_db, bnum, apow, fpow, opts);
+        return tctdboptimize(self, bnum, apow, fpow, opts);
     }
 
     %feature("docstring", "Remove all records of a table database object.
 
    If successful, the return value is true, else, it is false. ") vanish;
-   bool vanish() { return tctdbvanish(self->_db); } 
+   bool vanish() { return tctdbvanish(self); } 
 
    %feature("docstring", "Copy the database file of a table database object.
 
@@ -374,7 +347,7 @@ Returns
 If successful, the return value is true, else, it is false.  False is returned if the executed
 command returns non-zero code.");   
     bool copy(const char *path) { 
-        return tctdbcopy(self->_db, path);
+        return tctdbcopy(self, path);
     }
 
     %feature("docstring", "Begin the transaction of a table database object.
@@ -391,7 +364,7 @@ Returns
 If successful, the return value is true, else, it is false.
 ") tranbegin;
     bool tranbegin() {
-        return tctdbtranbegin(self->_db);
+        return tctdbtranbegin(self);
     }
 
     %feature("docstring", "Commit the transaction of a table database object.
@@ -400,7 +373,7 @@ If successful, the return value is true, else, it is false.
 Update in the transaction is fixed when it is committed successfully. 
 ") trancommit;
     bool trancommit() { 
-        return tctdbtrancommit(self->_db);
+        return tctdbtrancommit(self);
     }
 
     %feature("docstring", "Abort the transaction of a table database object.
@@ -412,7 +385,7 @@ Returns
 If successful, the return value is true, else, it is false.
 ") tranabort;
     bool tranabort() { 
-        return tctdbtranabort(self->_db);
+        return tctdbtranabort(self);
     }
     %feature("docstring", "Set a column index to a table database object.
 
@@ -428,8 +401,8 @@ type -- specifies the index type: `TDBITLEXICAL' for lexical string, `TDBITDECIM
 Returns
 If successful, the return value is true, else, it is false.
 ") setindex;
-    bool setindex(const std::string & name, int type) {
-        return tctdbsetindex(self->_db, name.c_str(), type);
+    bool setindex(const char *name, int type) {
+        return tctdbsetindex(self, name, type);
     }
 
     %feature("docstring", "Generate a unique ID number of a table database object.
@@ -437,7 +410,47 @@ If successful, the return value is true, else, it is false.
 Returns
 The return value is the new unique ID number or -1 on failure.
 ") genuid;
-    int64_t genuid() { return tctdbgenuid(self->_db); }
+    int64_t genuid() { return tctdbgenuid(self); }
+
+    %pythoncode %{ 
+    def items(self):
+        self.iterinit()
+        while True:
+            key = self.iternext()
+            if key is None:
+                break
+            print "key", repr(key)
+            yield (key, self.get(key))
+
+
+    def __setitem__(self, key, val): 
+        self.put(key, val)
+
+    def __getitem__(self, key):
+        val = self.get(key)
+        if val is None:
+            raise KeyError(key)
+        return val
+
+    def keys(self): 
+        """Iterate over all the keys"""
+        self.iterinit()
+        while True:
+            key = self.iternext()
+            if key is None:
+                break
+            yield key
+
+    __iter__ = keys
+
+    def values(self):
+        """Iterator over all the values"""
+        for k, v in self.items():
+            yield v
+
+    def query(self):
+        return TDBQuery(self) 
+    %}
 
     static const long TLARGE = 1 << 0;
     static const long TDEFLATE = 1 << 1;
@@ -457,19 +470,18 @@ The return value is the new unique ID number or -1 on failure.
     static const long ITOPT = 9998;
     static const long ITVOID = 9999;
     static const long ITKEEP = 1 << 24;
+}
+} TCTDB;
 
-};
-
-class TDBQuery { 
-    public:
-    /* Hold onto the db reference, otherwise we'll segfault if the db goes away before we do. */
-    %pythonappend TDBQuery(TDB *db) "self.__db = args[0]"
-    TDBQuery(TDB *tdb) ;
-    ~TDBQuery(); 
-};
-
-
-%extend TDBQuery {
+typedef struct {
+%extend { 
+    TDBQRY(TCTDB *db) {
+        return tctdbqrynew(db);
+    }
+    ~TDBQRY() {
+        if (self != NULL) 
+            tctdbqrydel(self);
+    }
 
     %feature("docstring", "Add a narrowing condition to a query object.
 
@@ -491,7 +503,7 @@ equal to at least one token in the expression.  All operations can be flagged by
 `TDBQCNEGATE' for negation, `TDBQCNOIDX' for using no index.
 expr -- specifies an operand exression.") addcond;
     void addcond(const char *name, int op, const char *expr) { 
-        tctdbqryaddcond(self->_q, name, op, expr);
+        tctdbqryaddcond(self, name, op, expr);
    }
     %feature("docstring", "Set the order of a query object.
 
@@ -502,7 +514,7 @@ type -- specifies the order type: `TDBQOSTRASC' for string ascending, `TDBQOSTRD
 string descending, `TDBQONUMASC' for number ascending, `TDBQONUMDESC' for number descending.
 ") setorder;
     void setorder(const char* name, int type) {
-        tctdbqrysetorder(self->_q, name, type);
+        tctdbqrysetorder(self, name, type);
     }
 
     %feature("docstring", "Set the limit number of records of the result of a query object.
@@ -515,7 +527,7 @@ skip -- specifies the number of skipped records of the result.  If it is not mor
 record is skipped. 
 ") setlimit;
     void setlimit(int max, int skip) { 
-        tctdbqrysetlimit(self->_q, max, skip);
+        tctdbqrysetlimit(self, max, skip);
     }
 
     %feature("docstring", "Execute the search of a query object.
@@ -526,7 +538,7 @@ function does never fail and return an empty list even if no record corresponds.
 ") search;
     %newobject search;
     TCLIST *search() {
-        return tctdbqrysearch(self->_q);
+        return tctdbqrysearch(self);
     }
 
     %feature("docstring", "Remove each record corresponding to a query object.
@@ -534,7 +546,7 @@ function does never fail and return an empty list even if no record corresponds.
 Returns
 If successful, the return value is true, else, it is false.") searchout;
    bool searchout() {
-        return tctdbqrysearchout(self->_q);
+        return tctdbqrysearchout(self);
     }
 
     %feature("docstring", "Get the hint of a query object.
@@ -543,7 +555,7 @@ Returns
 The return value is the hint string.
 ") hint;
     const char *hint() { 
-        return tctdbqryhint(self->_q);
+        return tctdbqryhint(self);
     }
 
     static const long QCSTREQ = 0;
@@ -575,89 +587,28 @@ The return value is the hint string.
     static const long MSISECT = 1;
     static const long MSDIFF = 2;
 
+    %pythoncode %{
+        def metasearch(self, other_queries, setop): 
+            """Search over multiple queries, including this one.
 
+            Arguments
+            other_queries -- TDBQuery, the other queries to search for.
+            setop -- int, a set operation. One of MSUNION, MSISECT, MSDIFF 
+            """
+            def _metasearch():
+                yield set(self.search())
+                for q in other_queries:
+                    yield set(q.search())
 
-};
+            set_func = {
+               self.MSUNION: set.union,
+               self.MSISECT: set.intersection,
+               self.MSDIFF: set.difference,
+            }[setop]
+            return reduce(set_func, _metasearch()) if other_queries else set()
+    %}
+}
 
-%pythoncode %{ 
-
-def metasearch(self, other_queries, setop): 
-    """Search over multiple queries, including this one.
-
-    Arguments
-    other_queries -- TDBQuery, the other queries to search for.
-    setop -- int, a set operation. One of MSUNION, MSISECT, MSDIFF 
-    """
-    def _metasearch():
-        yield set(self.search())
-        for q in other_queries:
-            yield set(q.search())
-
-    set_func = {
-       self.MSUNION: set.union,
-       self.MSISECT: set.intersection,
-       self.MSDIFF: set.difference,
-    }[setop]
-    return reduce(set_func, _metasearch()) if other_queries else set()
-
-TDBQuery.metasearch = metasearch
-
-del metasearch
-
-def items(self):
-    self.iterinit()
-    while True:
-        key = self.iternext()
-        if key is None:
-            break
-        print "key", repr(key)
-        yield (key, self.get(key))
-
-TDB.items = items
-
-del items
-
-
-def __setitem__(self, key, val): 
-    self.put(key, val)
-
-TDB.__setitem__ = __setitem__
-
-del __setitem__
-
-def __getitem__(self, key):
-    val = self.get(key)
-    if val is None:
-        raise KeyError(key)
-    return val
-
-TDB.__getitem__ = __getitem__
-
-del __getitem__
-
-def keys(self): 
-    """Iterate over all the keys"""
-    self.iterinit()
-    while True:
-        key = self.iternext()
-        if key is None:
-            break
-        yield key
-
-TDB.__iter__ = keys
-TDB.keys = keys
-del keys
-
-def values(self):
-    """Iterator over all the values"""
-    for k, v in self.items():
-        yield v
-
-TDB.values = values
-del values
-
-TDB.query = lambda self: TDBQuery(self)
-
-%}
+} TDBQRY;
 
 

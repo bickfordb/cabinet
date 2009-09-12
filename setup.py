@@ -37,6 +37,6 @@ Tokyo Cabinet is developed as the successor of GDBM and QDBM on the following pu
                sources=['src/hdb.cc'],
                libraries=['tokyocabinet']),
             Extension('cabinet._tdb',
-               sources=['src/tdb.cc'],
+               sources=['src/tdb.c'],
                libraries=['tokyocabinet'])])
 

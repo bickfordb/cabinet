@@ -1,6 +1,6 @@
-%module(docstring="The B+ tree database API of Tokyo Cabinet", module="cabinet") bdb2
+%module(docstring="The B+ tree database API of Tokyo Cabinet", module="cabinet") bdb
 %include "typemaps.i"
-%include "tcmaps2.i"
+%include "tcmaps.i"
 
 %{
 #define SWIG_FILE_WITH_INIT
