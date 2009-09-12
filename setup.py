@@ -1,7 +1,7 @@
 from distutils.core import setup, Extension
 
 setup(name='cabinet',
-       version='1.0.1',
+       version='1.1',
        description='Tokyo Cabinet IDL compatible bindings',
        long_description='''Tokyo Cabinet IDL compatible bindings
 
