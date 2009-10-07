@@ -4,7 +4,7 @@ py_output = src/cabinet/adb.py src/cabinet/bdb.py src/cabinet/fdb.py src/cabinet
 
 deps = src/bdb.i src/tdb.i src/fdb.i src/adb.i src/hdb.i src/tcmaps.i src/ecode.i src/cabinet/__init__.py
 
-all: $(c_output) $(cpp_output) src/cabinet/__init__.py src/cabinet
+all: $(c_output) src/cabinet/__init__.py src/cabinet
 
 src/cabinet/__init__.py:
 	- touch src/cabinet/__init__.py

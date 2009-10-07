@@ -1,7 +1,35 @@
 from distutils.core import setup, Extension
+import commands
+import os
+import re
+import sys
+
+if sys.version_info < (2, 3):
+      raise Error, "Python 2.3 or later is required"
+
+include_dirs = ['/usr/include', '/usr/local/include', '/opt/local/include']
+library_dirs = ['/usr/lib', '/usr/local/lib', '/opt/local/lib']
+
+if sys.platform == 'linux2':
+    os.environ['PATH'] += ":/usr/local/bin:$home/bin:.:..:../..:/opt/local/bin"
+
+    tcinc = commands.getoutput('tcucodec conf -i 2>/dev/null')
+    minc = re.search(r'-I([/\w]+)', tcinc)
+    if minc:
+        for path in minc.groups():
+            include_dirs.append(path)
+        include_dirs = sorted(set(include_dirs), key=include_dirs.index)
+
+    tclib = commands.getoutput('tcucodec conf -l 2>/dev/null')
+    mlib = re.search(r'-L([/\w]+)', tclib)
+    if mlib:
+        for path in mlib.groups():
+            library_dirs.append(path)
+        library_dirs = sorted(set(library_dirs), key=library_dirs.index)
+
 
 setup(name='cabinet',
-       version='1.1',
+       version='1.1.1',
        description='Tokyo Cabinet IDL compatible bindings',
        long_description='''Tokyo Cabinet IDL compatible bindings
 
@@ -26,17 +54,27 @@ Tokyo Cabinet is developed as the successor of GDBM and QDBM on the following pu
        ext_modules=[
            Extension('cabinet._bdb',
                sources=['src/bdb.c'],
-               libraries=['tokyocabinet']),
+               libraries=['tokyocabinet'],
+               include_dirs=include_dirs,
+               library_dirs=library_dirs),
            Extension('cabinet._adb',
                sources=['src/adb.c'],
-               libraries=['tokyocabinet']),
+               libraries=['tokyocabinet'],
+               include_dirs=include_dirs,
+               library_dirs=library_dirs),
            Extension('cabinet._fdb',
                sources=['src/fdb.c'],
-               libraries=['tokyocabinet']),
+               libraries=['tokyocabinet'],
+               include_dirs=include_dirs,
+               library_dirs=library_dirs),
            Extension('cabinet._hdb',
                sources=['src/hdb.c'],
-               libraries=['tokyocabinet']),
+               libraries=['tokyocabinet'],
+               include_dirs=include_dirs,
+               library_dirs=library_dirs),
             Extension('cabinet._tdb',
                sources=['src/tdb.c'],
-               libraries=['tokyocabinet'])])
+               libraries=['tokyocabinet'],
+               include_dirs=include_dirs,
+               library_dirs=library_dirs)])
 
