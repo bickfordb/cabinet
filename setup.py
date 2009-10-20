@@ -29,7 +29,7 @@ if sys.platform == 'linux2':
 
 
 setup(name='cabinet',
-       version='1.1.1',
+       version='1.1.2',
        description='Tokyo Cabinet IDL compatible bindings',
        long_description='''Tokyo Cabinet IDL compatible bindings
 

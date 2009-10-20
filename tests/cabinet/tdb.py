@@ -35,8 +35,8 @@ class TDBTest(unittest.TestCase):
 
     def test_setindex(self):
         db = tdb.TDB() 
-        db.setindex('name', tdb.TDB.ITLEXICAL | tdb.TDB.ITOPT)
         db.open(self.dir + '/tdb-setindex.db', tdb.TDB.OCREAT | tdb.TDB.OREADER | tdb.TDB.OWRITER)
+        assert db.setindex('name', tdb.TDB.ITLEXICAL)
         db.put('a', {'name': 'Brandon', 'gender': 'm', 'age': '29'})
 
     def test_len(self):

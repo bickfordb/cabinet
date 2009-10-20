@@ -1,9 +1,11 @@
 from cabinet import tdb
 
 users = tdb.TDB()
-# Create a lexical btree index on gender:
-users.setindex('gender', users.ITLEXICAL | users.ITOPT)
+
 users.open('./users.tct', users.OCREAT | users.OREADER | users.OWRITER)
+
+# Create a lexical btree index on gender:
+users.setindex('gender', users.ITLEXICAL)
 
 # Add some users
 print "add"
