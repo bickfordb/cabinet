@@ -10,9 +10,10 @@ src/cabinet/bdb.py
 src/cabinet/fdb.py
 src/cabinet/hdb.py
 src/cabinet/tdb.py
-tests/cabinet/__init__.py
-tests/cabinet/adb.py
-tests/cabinet/bdb.py
-tests/cabinet/fdb.py
-tests/cabinet/hdb.py
-tests/cabinet/tdb.py
+tests/__init__.py
+tests/adb.py
+tests/bdb.py
+tests/fdb.py
+tests/hdb.py
+tests/tdb.py
+tests/main.py
