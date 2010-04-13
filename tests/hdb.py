@@ -79,8 +79,15 @@ class HDBTest(unittest.TestCase):
     def test_sync(self):
         assert self.db.sync()
 
+    def test_keys(self):
+        self.db.put('a', 'x')
+        self.db.put('b', 'y')
+        assert_eq(set(self.db.keys()), set(['a', 'b']))
+
+
     def tearDown(self):
         shutil.rmtree(self.dir, ignore_errors=True)
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -21,14 +21,13 @@ $(C_SOURCES): src/cabinet/%.c : $(IFACE)/%.i $(IFACE)/tcmaps.i $(IFACE)/ecode.i
 	$(SWIG) $(SWIG_OPTIONS) -python -o $@ -outdir $(SRC)/cabinet $<
 
 clean:
-	- rm -rf $(BUILD) dist $(C_SOURCES) 
+	- rm -rf $(BUILD) dist $(C_SOURCES) test/*.pyc
 	
 $(BUILD)/test/stamp: $(C_SOURCES) src/cabinet/__init__.py 
 	- rm -rf $(BUILD)/test
 	- mkdir -p $(BUILD)
 	$(PYTHON) setup.py install --install-lib=$(BUILD)/test
 	touch $@
-
 
 test: $(BUILD)/test/stamp
 	- PYTHONPATH=$(BUILD)/test $(PYTHON) -m tests.main

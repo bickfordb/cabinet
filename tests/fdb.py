@@ -78,6 +78,11 @@ class FDBTest(unittest.TestCase):
         self.db.close()
         shutil.rmtree(self.dir, ignore_errors=True)
 
+    def test_keys(self):
+        self.db.put(1, 'x')
+        self.db.put(2, 'y')
+        assert_eq(set(self.db.keys()), set([1, 2]))
+
 if __name__ == '__main__':
     unittest.main()
 
