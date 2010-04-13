@@ -116,7 +116,7 @@ typedef struct {
 
     def values(self): 
         """Iterate over all the values in the database"""
-        for k, v in self:
+        for k, v in self.items():
             yield v
 
     def __getitem__(self, key):

@@ -78,10 +78,21 @@ class FDBTest(unittest.TestCase):
         self.db.close()
         shutil.rmtree(self.dir, ignore_errors=True)
 
+    def test_items(self):
+        self.db.put(1, 'x')
+        self.db.put(2, 'y')
+        assert_eq(set(self.db.items()), set([(1, 'x'), (2, 'y')]))
+
     def test_keys(self):
         self.db.put(1, 'x')
         self.db.put(2, 'y')
         assert_eq(set(self.db.keys()), set([1, 2]))
+        assert_eq(set(self.db), set([1, 2]))
+
+    def test_values(self):
+        self.db.put(1, 'x')
+        self.db.put(2, 'y')
+        assert_eq(set(self.db.values()), set(['x', 'y']))
 
 if __name__ == '__main__':
     unittest.main()

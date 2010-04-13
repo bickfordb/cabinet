@@ -83,7 +83,17 @@ class HDBTest(unittest.TestCase):
         self.db.put('a', 'x')
         self.db.put('b', 'y')
         assert_eq(set(self.db.keys()), set(['a', 'b']))
+        assert_eq(set(self.db), set(['a', 'b']))
 
+    def test_values(self):
+        self.db.put('a', 'x')
+        self.db.put('b', 'y')
+        assert_eq(set(self.db.values()), set(['x', 'y']))
+
+    def test_items(self):
+        self.db.put('a', 'x')
+        self.db.put('b', 'y')
+        assert_eq(set(self.db.items()), set([('a', 'x'), ('b', 'y')]))
 
     def tearDown(self):
         shutil.rmtree(self.dir, ignore_errors=True)
