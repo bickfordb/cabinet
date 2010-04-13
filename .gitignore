@@ -1,8 +1,10 @@
 build
 dist
-src/cabinet/*db.py
-src/cabinet/*db.c
 *.swp
 *.swo
 *.pyc
 *.pyo
+setup.py
+src/cabinet/*.py
+src/cabinet/*.c
+
