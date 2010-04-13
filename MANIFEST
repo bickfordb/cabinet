@@ -1,9 +1,9 @@
 setup.py
-src/adb.c
-src/bdb.c
-src/fdb.c
-src/hdb.c
-src/tdb.c
+src/cabinet/adb.c
+src/cabinet/bdb.c
+src/cabinet/fdb.c
+src/cabinet/hdb.c
+src/cabinet/tdb.c
 src/cabinet/__init__.py
 src/cabinet/adb.py
 src/cabinet/bdb.py

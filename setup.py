@@ -27,7 +27,6 @@ if sys.platform == 'linux2':
             library_dirs.append(path)
         library_dirs = sorted(set(library_dirs), key=library_dirs.index)
 
-
 setup(name='cabinet',
        version='1.1.2',
        description='Tokyo Cabinet IDL compatible bindings',
@@ -53,27 +52,27 @@ Tokyo Cabinet is developed as the successor of GDBM and QDBM on the following pu
        ],
        ext_modules=[
            Extension('cabinet._bdb',
-               sources=['src/bdb.c'],
+               sources=['src/cabinet/bdb.c'],
                libraries=['tokyocabinet'],
                include_dirs=include_dirs,
                library_dirs=library_dirs),
            Extension('cabinet._adb',
-               sources=['src/adb.c'],
+               sources=['src/cabinet/adb.c'],
                libraries=['tokyocabinet'],
                include_dirs=include_dirs,
                library_dirs=library_dirs),
            Extension('cabinet._fdb',
-               sources=['src/fdb.c'],
+               sources=['src/cabinet/fdb.c'],
                libraries=['tokyocabinet'],
                include_dirs=include_dirs,
                library_dirs=library_dirs),
            Extension('cabinet._hdb',
-               sources=['src/hdb.c'],
+               sources=['src/cabinet/hdb.c'],
                libraries=['tokyocabinet'],
                include_dirs=include_dirs,
                library_dirs=library_dirs),
             Extension('cabinet._tdb',
-               sources=['src/tdb.c'],
+               sources=['src/cabinet/tdb.c'],
                libraries=['tokyocabinet'],
                include_dirs=include_dirs,
                library_dirs=library_dirs)])

@@ -1,8 +1,8 @@
 build
 dist
-src/*.cc
-src/*.c
 src/cabinet/*db.py
+src/cabinet/*db.c
 *.swp
 *.swo
 *.pyc
+*.pyo

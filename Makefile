@@ -1,38 +1,34 @@
+PYTHON ?= python
+SWIG ?= swig
+BUILD ?= build
 
-c_output = src/bdb.c src/tdb.c src/hdb.c src/adb.c src/fdb.c
-py_output = src/cabinet/adb.py src/cabinet/bdb.py src/cabinet/fdb.py src/cabinet/hdb.py
+DATABASE_TYPES = adb bdb fdb hdb tdb
+IFACE ?= interface
+SRC ?= src
+SOURCES = $(DATABASE_TYPES:%=$(IFACE)/%.i) $(IFACE)/tcmaps.i $(IFACE)/ecode.i
+C_SOURCES := $(DATABASE_TYPES:%=$(SRC)/cabinet/%.c) 
+TCUCODEC ?= tcucodec
+SWIG_OPTIONS += -modern
+SWIG_OPTIONS += $(SHELL $(TCUCODEC) -i)
 
-deps = src/bdb.i src/tdb.i src/fdb.i src/adb.i src/hdb.i src/tcmaps.i src/ecode.i src/cabinet/__init__.py
+all: $(C_SOURCES) 
 
-all: $(c_output) src/cabinet/__init__.py src/cabinet
+$(PKG)/stamp: $(C_SOURCES) $(PKG)/cabinet/__init__.py
+	install -d $(PKG)
+	touch $@
 
-src/cabinet/__init__.py:
-	- touch src/cabinet/__init__.py
-
-$(c_output): src/%.c : src/%.i src/tcmaps.i
-	swig -I/opt/local/include -modern -python -o $@ -outdir src/cabinet $<
+$(C_SOURCES): src/cabinet/%.c : $(IFACE)/%.i $(IFACE)/tcmaps.i $(IFACE)/ecode.i
+	$(SWIG) $(SWIG_OPTIONS) -python -o $@ -outdir $(SRC)/cabinet $<
 
 clean:
-	- rm -rf build dist $(c_output) $(py_output) src/cabinet/*.py
+	- rm -rf $(BUILD) dist $(C_SOURCES) 
 	
-build/test: $(c_output) $(deps)
-	- rm -rf build/test
-	- mkdir build
-	python setup.py install --install-lib=build/test
+$(BUILD)/test/stamp: $(C_SOURCES) src/cabinet/__init__.py 
+	- rm -rf $(BUILD)/test
+	- mkdir -p $(BUILD)
+	$(PYTHON) setup.py install --install-lib=$(BUILD)/test
+	touch $@
 	
-test:
-	- rm -rf build/test
-	$(MAKE) build/test
-	- PYTHONPATH="build/test:$(PYTHONPATH)" python -m tests.cabinet.bdb
-	- PYTHONPATH="build/test:$(PYTHONPATH)" python -m tests.cabinet.tdb
-	- PYTHONPATH="build/test:$(PYTHONPATH)" python -m tests.cabinet.hdb
-	- PYTHONPATH="build/test:$(PYTHONPATH)" python -m tests.cabinet.fdb
-	- PYTHONPATH="build/test:$(PYTHONPATH)" python -m tests.cabinet.adb
-	rm -rf build/test
-
-bench: build/test
-	PYTHONPATH=build/test python -m bench
-
-tb: build/test
-	PYTHONPATH=build/test python -m tb
+test: $(BUILD)/test/stamp
+	- PYTHONPATH=$(BUILD)/test $(PYTHON) -m tests.main
 
