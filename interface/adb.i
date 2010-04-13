@@ -108,8 +108,11 @@ typedef struct {
 
     def keys(self):
         """Iterate over all the keys in the database"""
-        for k, v in self:
-            yield k
+        self.iterinit()
+        key = self.iternext()
+        while key is not None:
+            yield key
+            key = self.iternext()
 
     def values(self): 
         """Iterate over all the values in the database"""

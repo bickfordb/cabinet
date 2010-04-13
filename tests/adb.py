@@ -87,6 +87,11 @@ class ADBTest(unittest.TestCase):
         result = self.db.misc("putcat", ['a', 'w'])
         assert_eq(self.db.get('a'), 'xw')
 
+    def test_adb(self):
+        self.db.put("a", "x")
+        self.db.put("b", "y")
+        assert_eq(set(self.db.keys()), set(["a", "b"]))
+
     def tearDown(self):
         shutil.rmtree(self.dir, ignore_errors=True)
 
