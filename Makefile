@@ -18,7 +18,7 @@ $(C_SOURCES): $(SRC)/cabinet/%.c : $(IFACE)/%.i $(IFACE)/tcmaps.i $(IFACE)/ecode
 	$(SWIG) $(SWIG_OPTIONS) -python -o $@ -outdir $(SRC)/cabinet $<
 
 clean:
-	- rm -rf $(BUILD) dist $(C_SOURCES) test/*.pyc src/cabinet/*.py setup.py 
+	- rm -rf $(BUILD) dist $(C_SOURCES) tests/*.pyc src/cabinet/*.py setup.py
 .PHONY: clean
 	
 $(SRC)/cabinet/__init__.py: $(SRC)/__init__.py.tmpl version.txt
