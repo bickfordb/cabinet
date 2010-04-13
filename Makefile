@@ -28,7 +28,13 @@ $(BUILD)/test/stamp: $(C_SOURCES) src/cabinet/__init__.py
 	- mkdir -p $(BUILD)
 	$(PYTHON) setup.py install --install-lib=$(BUILD)/test
 	touch $@
-	
+
+
 test: $(BUILD)/test/stamp
 	- PYTHONPATH=$(BUILD)/test $(PYTHON) -m tests.main
+
+bench: scripts/bench.py $(BUILD)/test/stamp
+	- rm -rf users.tcb
+	- PYTHONPATH=$(BUILD)/test $(PYTHON) scripts/bench.py
+	- rm -rf users.tcb
 
